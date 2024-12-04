@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatelessWidget {
   @override
@@ -60,24 +62,6 @@ class ProfilePage extends StatelessWidget {
                 ),
                 _buildListTile(
                   context,
-                  icon: Icons.location_on_outlined,
-                  title: 'Delivery Info',
-                  onTap: () {},
-                ),
-                _buildListTile(
-                  context,
-                  icon: Icons.location_on_outlined,
-                  title: 'Delivery Info',
-                  onTap: () {},
-                ),
-                _buildListTile(
-                  context,
-                  icon: Icons.location_on_outlined,
-                  title: 'Delivery Info',
-                  onTap: () {},
-                ),
-                _buildListTile(
-                  context,
                   icon: Icons.settings_outlined,
                   title: 'Settings',
                   onTap: () {},
@@ -98,8 +82,8 @@ class ProfilePage extends StatelessWidget {
                   context,
                   icon: Icons.logout,
                   title: 'Sign Out',
-                  onTap: () {
-                    // Add sign out logic here
+                  onTap: () async {
+                    await _signOut(context);
                   },
                   isSignOut: true,
                 ),
@@ -109,6 +93,25 @@ class ProfilePage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  // Method to handle logout
+  Future<void> _signOut(BuildContext context) async {
+    try {
+      // Sign out from Firebase
+      await FirebaseAuth.instance.signOut();
+
+      // Clear saved user data from SharedPreferences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.remove('uid');
+
+      // Navigate back to login screen
+      Navigator.pushReplacementNamed(context, '/login');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sign Out failed: ${e.toString()}')),
+      );
+    }
   }
 
   Widget _buildListTile(BuildContext context,
