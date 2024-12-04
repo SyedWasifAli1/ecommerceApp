@@ -27,7 +27,7 @@ class CategoriesService {
     try {
       String imageUrl = '';
       if (imageFile != null) {
-        imageUrl = await _uploadImage(imageFile);
+        imageUrl = await _uploadImage(imageFile); // Upload image
       }
       category.thumbnail = imageUrl; // Set image URL in category object
       await _db.collection(collectionPath).add(category.toMap());
@@ -64,16 +64,20 @@ class CategoriesService {
   // Upload image to Firebase Storage
   Future<String> _uploadImage(File imageFile) async {
     try {
-      final ref = _storage
-          .ref()
-          .child('categories/${DateTime.now().millisecondsSinceEpoch}.jpg');
+      // Define a unique path for the image
+      final fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      final ref = _storage.ref().child('categories/abc.jpg');
+
+      // Upload the image file
       final uploadTask = ref.putFile(imageFile);
       final snapshot = await uploadTask;
+
+      // Get the download URL after upload is complete
       final downloadUrl = await snapshot.ref.getDownloadURL();
       return downloadUrl;
     } catch (e) {
       print("Error uploading image: $e");
-      return '';
+      return ''; // Return empty URL in case of error
     }
   }
 }

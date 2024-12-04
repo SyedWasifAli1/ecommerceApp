@@ -198,8 +198,32 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                 subtitle: Text(category.description),
                 leading: (category.thumbnail != null &&
                         category.thumbnail!.isNotEmpty)
-                    ? Image.network(category.thumbnail!)
-                    : Icon(Icons.image),
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          'https://firebasestorage.googleapis.com/v0/b/authwithfirebase-20a41.appspot.com/o/categories%2FScreenshot%20(7).png?alt=media&token=25a423aa-3204-4bd9-b615-b5d01d30cf75',
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            print('Error loading image: $error');
+                            return Icon(Icons.broken_image,
+                                size: 50, color: Colors.grey);
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes !=
+                                        null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            );
+                          },
+                        ))
+                    : Icon(Icons.image, size: 50, color: Colors.grey),
                 trailing: IconButton(
                   icon: Icon(Icons.delete),
                   onPressed: () => _deleteCategory(category.id),

@@ -8,6 +8,7 @@ import 'package:ecommerce/screen/home/home_screen.dart';
 import 'package:ecommerce/screen/home/profile_page.dart';
 import 'package:ecommerce/screen/auth/login.dart';
 import 'package:ecommerce/screen/auth/signup.dart';
+import 'package:ecommerce/screen/home/widgets/product_d.dart';
 import 'package:ecommerce/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -16,14 +17,15 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: FirebaseOptions(
-      apiKey: "AIzaSyAVm_KPFmqRT0OQW_qidmlNUo1VF5J3fOM",
-      authDomain: "ecommerce-e0c9c.firebaseapp.com",
-      projectId: "ecommerce-e0c9c",
-      storageBucket: "ecommerce-e0c9c.firebasestorage.app",
-      messagingSenderId: "384803671736",
-      appId: "1:384803671736:web:6fa253278a836181b0ee4d",
-      measurementId: "G-BQ3S8J228Z",
-    ),
+        apiKey: "AIzaSyBeGl5FJE-ZkGeSJ2c_8BZZ67gXdTyLVeI",
+        authDomain: "authwithfirebase-20a41.firebaseapp.com",
+        databaseURL:
+            "https://authwithfirebase-20a41-default-rtdb.firebaseio.com",
+        projectId: "authwithfirebase-20a41",
+        storageBucket: "authwithfirebase-20a41.appspot.com",
+        messagingSenderId: "513334310836",
+        appId: "1:513334310836:web:7090fa61046cd6f1dce4e1",
+        measurementId: "G-11T09DTR7V"),
   );
   runApp(const MyApp());
 }
@@ -47,6 +49,7 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => SignUpScreen(),
         '/forgetpassword': (context) => ForgotPasswordScreen(),
         '/otp': (context) => OtpVerificationScreen(),
+        // '/pd': (context) => ProductDetailScreen(),
         '/home': (context) => HomeScreen(
               role: 'customers',
             ), // Set a default role for testing
