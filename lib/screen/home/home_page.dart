@@ -15,6 +15,7 @@ class HomePage extends StatelessWidget {
           SearchField(),
           // HeroSection(),
           HeroSectionSlider(),
+
           CategoriesSection(),
           Padding(
             padding: const EdgeInsets.all(16.0),

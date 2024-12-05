@@ -1,26 +1,26 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CategoriesSection extends StatelessWidget {
-  // Dummy data for categories
-  final List<Map<String, String>> categoriesData = [
-    {
-      "image":
-          "https://tse4.mm.bing.net/th?id=OIP.pLkz2kXu8wy0FPxjy5U1OwHaFk&pid=Api&P=0&h=220",
-      "name": "Electronics"
-    },
-    {
-      "image":
-          "https://sp.yimg.com/ib/th?id=OPHS.AK3xL1ouxWD5fA474C474&o=5&pid=21.1&w=160&h=105",
-      "name": "Fashion"
-    },
-    {"image": "https://via.placeholder.com/100", "name": "Grocery"},
-    {"image": "https://via.placeholder.com/100", "name": "Home Decor"},
-    {"image": "https://via.placeholder.com/100", "name": "Toys"},
-    {"image": "https://via.placeholder.com/100", "name": "Toys"},
-    {"image": "https://via.placeholder.com/100", "name": "Toys"},
-    {"image": "https://via.placeholder.com/100", "name": "Toys"},
-    {"image": "https://via.placeholder.com/100", "name": "Toys"},
-  ];
+  const CategoriesSection({Key? key}) : super(key: key);
+
+  // Fetch categories from Firestore
+  Stream<List<Map<String, String>>> fetchCategories() {
+    return FirebaseFirestore.instance.collection('categories').snapshots().map(
+      (snapshot) {
+        return snapshot.docs.map((doc) {
+          // Convert each field to String explicitly
+          return {
+            "image": (doc['image'] ?? '').toString(),
+            "name": (doc['title'] ?? '').toString(),
+          };
+        }).toList();
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,60 +40,112 @@ class CategoriesSection extends StatelessWidget {
           double radiusFactor = isLargeScreen ? 0.03 : 0.08;
           double fontSizeFactor = isLargeScreen ? 0.01 : 0.03;
 
-          return Column(
-            children: [
-              // More Button
-              Align(
-                alignment: Alignment.topRight,
-                child: TextButton(
-                  onPressed: () {
-                    // Functionality for more categories
-                  },
+          return StreamBuilder<List<Map<String, String>>>(
+            stream: fetchCategories(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
+
+              if (snapshot.hasError) {
+                return Center(
                   child: Text(
-                    "More",
-                    style: TextStyle(
-                        color: Colors.blue, fontWeight: FontWeight.bold),
+                    "Error: ${snapshot.error}",
+                    style: TextStyle(color: Colors.red),
                   ),
-                ),
-              ),
-              // Categories Section with ListView
-              SizedBox(
-                height: constraints.maxWidth *
-                    heightFactor, // Responsive height for the categories
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: categoriesData.length,
-                  itemBuilder: (context, index) {
-                    final category = categoriesData[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Column(
-                        children: [
-                          // Circular image with border for categories
-                          Container(
-                            child: CircleAvatar(
-                              radius: constraints.maxWidth *
-                                  radiusFactor, // Responsive size
-                              backgroundImage: NetworkImage(category["image"]!),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          // Category name
-                          Text(
-                            category["name"]!,
-                            style: TextStyle(
-                              fontSize: constraints.maxWidth *
-                                  fontSizeFactor, // Responsive text size
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                );
+              }
+
+              final categoriesData = snapshot.data ?? [];
+
+              if (categoriesData.isEmpty) {
+                return Center(
+                  child: Text(
+                    "No categories available",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                );
+              }
+
+              return Column(
+                children: [
+                  // More Button
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: TextButton(
+                      onPressed: () {
+                        // Functionality for more categories
+                      },
+                      child: Text(
+                        "More",
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    );
-                  },
-                ),
-              ),
-            ],
+                    ),
+                  ),
+                  // Categories Section with ListView
+                  SizedBox(
+                    height: constraints.maxWidth *
+                        heightFactor, // Responsive height for the categories
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: categoriesData.length,
+                      itemBuilder: (context, index) {
+                        final category = categoriesData[index];
+                        final imageBytes = category["image"]!.isNotEmpty
+                            ? base64Decode(category["image"]!)
+                            : null;
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Column(
+                            children: [
+                              // Display image using Image.memory
+                              CircleAvatar(
+                                radius: constraints.maxWidth *
+                                    radiusFactor, // Responsive size
+                                backgroundColor: Colors.grey.shade200,
+                                child: imageBytes != null
+                                    ? ClipOval(
+                                        child: Image.memory(
+                                          imageBytes,
+                                          fit: BoxFit.cover,
+                                          width: constraints.maxWidth *
+                                              radiusFactor *
+                                              2,
+                                          height: constraints.maxWidth *
+                                              radiusFactor *
+                                              2,
+                                        ),
+                                      )
+                                    : Icon(
+                                        Icons.image_not_supported,
+                                        size:
+                                            constraints.maxWidth * radiusFactor,
+                                        color: Colors.grey,
+                                      ),
+                              ),
+                              const SizedBox(height: 8),
+                              // Category name
+                              Text(
+                                category["name"]!,
+                                style: TextStyle(
+                                  fontSize: constraints.maxWidth *
+                                      fontSizeFactor, // Responsive text size
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
           );
         },
       ),

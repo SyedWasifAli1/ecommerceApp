@@ -1,10 +1,14 @@
 import 'package:ecommerce/screen/admin/categries/categories_view.dart';
+import 'package:ecommerce/screen/admin/categries/pro.dart';
+import 'package:ecommerce/screen/admin/categries/products.dart';
 import 'package:ecommerce/screen/auth/SplashScreen.dart';
 import 'package:ecommerce/screen/auth/forget_password.dart';
 import 'package:ecommerce/screen/auth/mailer.dart';
 import 'package:ecommerce/screen/auth/otp.dart';
 import 'package:ecommerce/screen/home/home_page.dart';
 import 'package:ecommerce/screen/home/home_screen.dart';
+import 'package:ecommerce/screen/home/exam.dart';
+import 'package:ecommerce/screen/home/e.dart';
 import 'package:ecommerce/screen/home/profile_page.dart';
 import 'package:ecommerce/screen/auth/login.dart';
 import 'package:ecommerce/screen/auth/signup.dart';
@@ -44,7 +48,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       // Define named routes
       routes: {
-        '/': (context) => SplashScreen(),
+        '/': (context) => ProductList(),
         '/login': (context) => LoginScreen(),
         '/signup': (context) => SignUpScreen(),
         '/forgetpassword': (context) => ForgotPasswordScreen(),
@@ -57,7 +61,8 @@ class MyApp extends StatelessWidget {
               role: 'admin',
             ), // Set a default role for testing
         '/profile': (context) => ProfilePage(),
-        '/cate': (context) => CategoryListScreen(),
+        '/cate': (context) => AddCategoryScreen(),
+        '/products': (context) => ProductsScreen(),
       },
     );
   }

@@ -1,243 +1,237 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:ecommerce/models/categories.dart';
-import 'package:ecommerce/services/categories_service.dart';
+import 'dart:html' as html;
+import 'package:flutter/foundation.dart';
 
-class CategoryListScreen extends StatefulWidget {
+class AddCategoryScreen extends StatefulWidget {
   @override
-  _CategoryListScreenState createState() => _CategoryListScreenState();
+  _AddCategoryScreenState createState() => _AddCategoryScreenState();
 }
 
-class _CategoryListScreenState extends State<CategoryListScreen> {
-  final CategoriesService _categoriesService = CategoriesService();
-  late Future<List<Category>> _categories;
+class _AddCategoryScreenState extends State<AddCategoryScreen> {
+  final titleController = TextEditingController();
+  final descriptionController = TextEditingController();
+  String? _uploadedImageBase64;
   final ImagePicker _picker = ImagePicker();
-  File? _selectedImage;
 
-  @override
-  void initState() {
-    super.initState();
-    _categories = _categoriesService.getCategories();
+  // Fetch Categories
+  Stream<QuerySnapshot> getCategoriesStream() {
+    return FirebaseFirestore.instance.collection('categories').snapshots();
   }
 
-  // Pick image from gallery
-  Future<void> _pickImage() async {
-    final XFile? pickedFile =
-        await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
+  // Pick Image Logic (Web and Mobile)
+  Future<void> pickImage() async {
+    if (kIsWeb) {
+      final html.FileUploadInputElement uploadInput =
+          html.FileUploadInputElement();
+      uploadInput.accept = 'image/*';
+      uploadInput.click();
+
+      uploadInput.onChange.listen((e) async {
+        final files = uploadInput.files;
+        if (files!.isEmpty) return;
+
+        final reader = html.FileReader();
+        reader.readAsArrayBuffer(files[0]);
+        reader.onLoadEnd.listen((e) async {
+          final Uint8List data = reader.result as Uint8List;
+          setState(() {
+            _uploadedImageBase64 = base64Encode(data);
+          });
+          Fluttertoast.showToast(msg: "Image selected successfully");
+        });
       });
+    } else {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        Uint8List data = await image.readAsBytes();
+        setState(() {
+          _uploadedImageBase64 = base64Encode(data);
+        });
+        Fluttertoast.showToast(msg: "Image selected successfully");
+      }
     }
   }
 
-  // Show dialog to add category
-  void _showAddCategoryDialog() {
-    final TextEditingController nameController = TextEditingController();
-    final TextEditingController descriptionController = TextEditingController();
+  // Add Category to Firestore
+  Future<void> addCategoryToFirestore() async {
+    if (titleController.text.isNotEmpty &&
+        descriptionController.text.isNotEmpty &&
+        _uploadedImageBase64 != null) {
+      try {
+        await FirebaseFirestore.instance.collection('categories').add({
+          'title': titleController.text,
+          'description': descriptionController.text,
+          'image': _uploadedImageBase64,
+        });
+
+        Fluttertoast.showToast(msg: "Category added successfully");
+        titleController.clear();
+        descriptionController.clear();
+        setState(() {
+          _uploadedImageBase64 = null;
+        });
+      } catch (error) {
+        Fluttertoast.showToast(msg: "Error adding category: $error");
+      }
+    } else {
+      Fluttertoast.showToast(msg: "Please fill all fields before submitting");
+    }
+  }
+
+  // Update Category
+  Future<void> updateCategory(
+      String id, String title, String description) async {
+    try {
+      await FirebaseFirestore.instance.collection('categories').doc(id).update({
+        'title': title,
+        'description': description,
+        'image': _uploadedImageBase64, // Update image if new one is selected
+      });
+
+      Fluttertoast.showToast(msg: "Category updated successfully");
+      setState(() {
+        _uploadedImageBase64 = null;
+      });
+    } catch (error) {
+      Fluttertoast.showToast(msg: "Error updating category: $error");
+    }
+  }
+
+  // Delete Category
+  Future<void> deleteCategory(String id) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('categories')
+          .doc(id)
+          .delete();
+      Fluttertoast.showToast(msg: "Category deleted successfully");
+    } catch (error) {
+      Fluttertoast.showToast(msg: "Error deleting category: $error");
+    }
+  }
+
+  // Show Dialog for Adding or Updating Category
+  void showCategoryDialog({String? id, String? title, String? description}) {
+    titleController.text = title ?? '';
+    descriptionController.text = description ?? '';
+    _uploadedImageBase64 = null;
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Add Category'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(labelText: 'Name'),
-              ),
-              TextField(
-                controller: descriptionController,
-                decoration: InputDecoration(labelText: 'Description'),
-              ),
-              SizedBox(height: 10),
-              _selectedImage != null
-                  ? Image.file(_selectedImage!)
-                  : IconButton(
-                      icon: Icon(Icons.add_a_photo),
-                      onPressed: _pickImage,
-                    ),
-            ],
+          title: Text(id == null ? "Add Category" : "Update Category"),
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: InputDecoration(labelText: "Category Title"),
+                ),
+                SizedBox(height: 10),
+                TextField(
+                  controller: descriptionController,
+                  decoration:
+                      InputDecoration(labelText: "Category Description"),
+                  maxLines: 3,
+                ),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: pickImage,
+                  child: Text("Select Image"),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Cancel'),
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel"),
             ),
             TextButton(
-              onPressed: () async {
-                final String name = nameController.text.trim();
-                final String description = descriptionController.text.trim();
-                if (name.isNotEmpty && description.isNotEmpty) {
-                  Category newCategory = Category(
-                    id: '',
-                    name: name,
-                    description: description,
-                    thumbnail: '',
+              onPressed: () {
+                if (id == null) {
+                  addCategoryToFirestore();
+                } else {
+                  updateCategory(
+                    id,
+                    titleController.text,
+                    descriptionController.text,
                   );
-                  await _categoriesService.createCategory(newCategory,
-                      imageFile: _selectedImage);
-                  setState(() {
-                    _categories = _categoriesService.getCategories();
-                    _selectedImage = null;
-                  });
-                  Navigator.pop(context);
                 }
+                Navigator.pop(context);
               },
-              child: Text('Add'),
+              child: Text(id == null ? "Add" : "Update"),
             ),
           ],
         );
       },
     );
-  }
-
-  // Show dialog to update category
-  void _showUpdateCategoryDialog(Category category) {
-    final TextEditingController nameController =
-        TextEditingController(text: category.name);
-    final TextEditingController descriptionController =
-        TextEditingController(text: category.description);
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Update Category'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(labelText: 'Name'),
-              ),
-              TextField(
-                controller: descriptionController,
-                decoration: InputDecoration(labelText: 'Description'),
-              ),
-              SizedBox(height: 10),
-              _selectedImage != null
-                  ? Image.file(_selectedImage!)
-                  : IconButton(
-                      icon: Icon(Icons.add_a_photo),
-                      onPressed: _pickImage,
-                    ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                final String name = nameController.text.trim();
-                final String description = descriptionController.text.trim();
-                if (name.isNotEmpty && description.isNotEmpty) {
-                  Category updatedCategory = Category(
-                    id: category.id,
-                    name: name,
-                    description: description,
-                    thumbnail: category.thumbnail,
-                  );
-                  await _categoriesService.updateCategory(updatedCategory,
-                      imageFile: _selectedImage);
-                  setState(() {
-                    _categories = _categoriesService.getCategories();
-                    _selectedImage = null;
-                  });
-                  Navigator.pop(context);
-                }
-              },
-              child: Text('Update'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // Delete category
-  void _deleteCategory(String categoryId) async {
-    await _categoriesService.deleteCategory(categoryId);
-    setState(() {
-      _categories = _categoriesService.getCategories();
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Categories')),
-      body: FutureBuilder<List<Category>>(
-        future: _categories,
+      appBar: AppBar(title: Text("Manage Categories")),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: getCategoriesStream(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No categories found'));
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(child: Text("No categories found"));
           }
 
-          final categories = snapshot.data!;
+          final categories = snapshot.data!.docs;
 
           return ListView.builder(
             itemCount: categories.length,
             itemBuilder: (context, index) {
-              final category = categories[index];
+              final doc = categories[index];
               return ListTile(
-                title: Text(category.name),
-                subtitle: Text(category.description),
-                leading: (category.thumbnail != null &&
-                        category.thumbnail!.isNotEmpty)
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          'https://firebasestorage.googleapis.com/v0/b/authwithfirebase-20a41.appspot.com/o/categories%2FScreenshot%20(7).png?alt=media&token=25a423aa-3204-4bd9-b615-b5d01d30cf75',
-                          width: 50,
-                          height: 50,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            print('Error loading image: $error');
-                            return Icon(Icons.broken_image,
-                                size: 50, color: Colors.grey);
-                          },
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Center(
-                              child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes !=
-                                        null
-                                    ? loadingProgress.cumulativeBytesLoaded /
-                                        loadingProgress.expectedTotalBytes!
-                                    : null,
-                              ),
-                            );
-                          },
-                        ))
+                title: Text(doc['title']),
+                subtitle: Text(doc['description']),
+                leading: doc['image'] != null
+                    ? Image.memory(
+                        base64Decode(doc['image']),
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                      )
                     : Icon(Icons.image, size: 50, color: Colors.grey),
-                trailing: IconButton(
-                  icon: Icon(Icons.delete),
-                  onPressed: () => _deleteCategory(category.id),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.edit, color: Colors.blue),
+                      onPressed: () => showCategoryDialog(
+                        id: doc.id,
+                        title: doc['title'],
+                        description: doc['description'],
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => deleteCategory(doc.id),
+                    ),
+                  ],
                 ),
-                onTap: () {
-                  _showUpdateCategoryDialog(category);
-                },
               );
             },
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showAddCategoryDialog,
+        onPressed: () => showCategoryDialog(),
         child: Icon(Icons.add),
       ),
     );
