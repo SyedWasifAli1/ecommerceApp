@@ -6,6 +6,13 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:html' as html;
 import 'package:flutter/foundation.dart';
 
+class Category {
+  final String id;
+  final String name;
+
+  Category({required this.id, required this.name});
+}
+
 class ProductsScreen extends StatefulWidget {
   const ProductsScreen({Key? key}) : super(key: key);
 
@@ -23,17 +30,18 @@ class _ProductsScreenState extends State<ProductsScreen> {
   String _description = '';
   String? _thumbnailBase64;
   List<String>? _imagesBase64;
-
   int _stock = 0;
   bool _isLoading = false;
 
   final ImagePicker _picker = ImagePicker();
 
   // Fetch categories for dropdown
-  Future<List<String>> fetchCategories() async {
+  Future<List<Category>> fetchCategories() async {
     final snapshot =
         await FirebaseFirestore.instance.collection('categories').get();
-    return snapshot.docs.map((doc) => doc['title'].toString()).toList();
+    return snapshot.docs.map((doc) {
+      return Category(id: doc.id, name: doc['title'].toString());
+    }).toList();
   }
 
   // Image picker logic for thumbnail (single image)
@@ -205,7 +213,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 value!.isEmpty ? "Please enter description" : null,
             onSaved: (value) => _description = value!,
           ),
-          FutureBuilder<List<String>>(
+          FutureBuilder<List<Category>>(
             future: fetchCategories(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -218,9 +226,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
               return DropdownButtonFormField<String>(
                 value: _selectedCategory,
                 items: categories.map((category) {
-                  return DropdownMenuItem(
-                    value: category,
-                    child: Text(category),
+                  return DropdownMenuItem<String>(
+                    value: category.id, // Store category ID
+                    child: Text(category.name), // Display category name
                   );
                 }).toList(),
                 onChanged: (value) => setState(() => _selectedCategory = value),

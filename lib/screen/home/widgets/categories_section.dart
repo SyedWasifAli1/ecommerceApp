@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:ecommerce/screen/home/categories_products.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:go_router/go_router.dart';
 
 class CategoriesSection extends StatelessWidget {
   const CategoriesSection({Key? key}) : super(key: key);
@@ -14,6 +16,7 @@ class CategoriesSection extends StatelessWidget {
         return snapshot.docs.map((doc) {
           // Convert each field to String explicitly
           return {
+            "id": (doc.id), // Get the document ID for navigation
             "image": (doc['image'] ?? '').toString(),
             "name": (doc['title'] ?? '').toString(),
           };
@@ -44,7 +47,7 @@ class CategoriesSection extends StatelessWidget {
             stream: fetchCategories(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               }
 
               if (snapshot.hasError) {
@@ -98,46 +101,68 @@ class CategoriesSection extends StatelessWidget {
                             ? base64Decode(category["image"]!)
                             : null;
 
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Column(
-                            children: [
-                              // Display image using Image.memory
-                              CircleAvatar(
-                                radius: constraints.maxWidth *
-                                    radiusFactor, // Responsive size
-                                backgroundColor: Colors.grey.shade200,
-                                child: imageBytes != null
-                                    ? ClipOval(
-                                        child: Image.memory(
-                                          imageBytes,
-                                          fit: BoxFit.cover,
-                                          width: constraints.maxWidth *
-                                              radiusFactor *
-                                              2,
-                                          height: constraints.maxWidth *
-                                              radiusFactor *
-                                              2,
+                        return GestureDetector(
+                          onTap: () {
+                            // Print the category ID to the console
+                            print("Category ID: ${category['id']}");
+                            // GoRouter.of(context)
+                            //     .go('/product/${category["id"]}');
+                            GoRouter.of(context)
+                                .go('/category/${category["id"]}');
+
+                            // Navigate to the CategoryDetailPage with category ID
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //     builder: (context) => CategoryDetailPage(
+                            //       categoryId:
+                            //           category["id"]!, // Pass category ID
+                            //     ),
+                            //   ),
+                            // );
+                          },
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: Column(
+                              children: [
+                                // Display image using Image.memory
+                                CircleAvatar(
+                                  radius: constraints.maxWidth *
+                                      radiusFactor, // Responsive size
+                                  backgroundColor: Colors.grey.shade200,
+                                  child: imageBytes != null
+                                      ? ClipOval(
+                                          child: Image.memory(
+                                            imageBytes,
+                                            fit: BoxFit.cover,
+                                            width: constraints.maxWidth *
+                                                radiusFactor *
+                                                2,
+                                            height: constraints.maxWidth *
+                                                radiusFactor *
+                                                2,
+                                          ),
+                                        )
+                                      : Icon(
+                                          Icons.image_not_supported,
+                                          size: constraints.maxWidth *
+                                              radiusFactor,
+                                          color: Colors.grey,
                                         ),
-                                      )
-                                    : Icon(
-                                        Icons.image_not_supported,
-                                        size:
-                                            constraints.maxWidth * radiusFactor,
-                                        color: Colors.grey,
-                                      ),
-                              ),
-                              const SizedBox(height: 8),
-                              // Category name
-                              Text(
-                                category["name"]!,
-                                style: TextStyle(
-                                  fontSize: constraints.maxWidth *
-                                      fontSizeFactor, // Responsive text size
-                                  fontWeight: FontWeight.w500,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 8),
+                                // Category name
+                                Text(
+                                  category["name"]!,
+                                  style: TextStyle(
+                                    fontSize: constraints.maxWidth *
+                                        fontSizeFactor, // Responsive text size
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       },
