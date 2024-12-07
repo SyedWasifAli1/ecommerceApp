@@ -144,178 +144,182 @@ class _CartPageState extends State<CartPage> {
     });
   }
 
-void showCheckoutBottomSheet() {
-  // Filter selected items for checkout
-  final selectedItems = cartItems.where((item) => item['isSelected']).toList();
+  void showCheckoutBottomSheet() {
+    // Filter selected items for checkout
+    final selectedItems =
+        cartItems.where((item) => item['isSelected']).toList();
 
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true, // Ensures the bottom sheet is scrollable
-    builder: (context) {
-      // Define controllers for the shipping details form
-      final phoneController = TextEditingController();
-      final addressController = TextEditingController();
-      final streetController = TextEditingController();
-      final cityController = TextEditingController();
-      final countryController = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // Ensures the bottom sheet is scrollable
+      builder: (context) {
+        // Define controllers for the shipping details form
+        final phoneController = TextEditingController();
+        final addressController = TextEditingController();
+        final streetController = TextEditingController();
+        final cityController = TextEditingController();
+        final countryController = TextEditingController();
 
-      // Calculate the total price of selected items
-      double totalPrice = selectedItems.fold(
-          0, (sum, item) => sum + (item['price'] * item['quantity']));
+        // Calculate the total price of selected items
+        double totalPrice = selectedItems.fold(
+            0, (sum, item) => sum + (item['price'] * item['quantity']));
 
-      return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min, // Fit the content to screen
-            children: [
-              Text(
-                'Checkout',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 20),
-              // List of selected cart items
-              ListView.builder(
-                shrinkWrap: true, // Fit content to avoid overflow
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: selectedItems.length,
-                itemBuilder: (context, index) {
-                  final item = selectedItems[index];
-                  return ListTile(
-                    leading: item['image'] != null
-                        ? Image.memory(
-                            item['image'],
-                            width: 40,
-                            height: 40,
-                            fit: BoxFit.cover,
-                          )
-                        : Icon(Icons.computer, size: 40),
-                    title: Text(item['name']),
-                    subtitle: Text('Quantity: ${item['quantity']}'),
-                    trailing: Text(
-                      '\$${(item['price'] * item['quantity']).toStringAsFixed(2)}',
-                    ),
-                  );
-                },
-              ),
-              Divider(),
-              // Shipping details form
-              TextField(
-                controller: phoneController,
-                decoration: InputDecoration(
-                  labelText: 'Phone Number',
-                  prefixIcon: Icon(Icons.phone),
-                  border: OutlineInputBorder(),
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min, // Fit the content to screen
+              children: [
+                Text(
+                  'Checkout',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
-                keyboardType: TextInputType.phone,
-              ),
-              SizedBox(height: 16),
-              TextField(
-                controller: addressController,
-                decoration: InputDecoration(
-                  labelText: 'Address',
-                  prefixIcon: Icon(Icons.location_on),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 16),
-              TextField(
-                controller: streetController,
-                decoration: InputDecoration(
-                  labelText: 'Street Address (Optional)',
-                  prefixIcon: Icon(Icons.streetview),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: cityController,
-                      decoration: InputDecoration(
-                        labelText: 'City',
-                        prefixIcon: Icon(Icons.location_city),
-                        border: OutlineInputBorder(),
+                SizedBox(height: 20),
+                // List of selected cart items
+                ListView.builder(
+                  shrinkWrap: true, // Fit content to avoid overflow
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: selectedItems.length,
+                  itemBuilder: (context, index) {
+                    final item = selectedItems[index];
+                    return ListTile(
+                      leading: item['image'] != null
+                          ? Image.memory(
+                              item['image'],
+                              width: 40,
+                              height: 40,
+                              fit: BoxFit.cover,
+                            )
+                          : Icon(Icons.computer, size: 40),
+                      title: Text(item['name']),
+                      subtitle: Text('Quantity: ${item['quantity']}'),
+                      trailing: Text(
+                        '\$${(item['price'] * item['quantity']).toStringAsFixed(2)}',
                       ),
-                    ),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: TextField(
-                      controller: countryController,
-                      decoration: InputDecoration(
-                        labelText: 'Country',
-                        prefixIcon: Icon(Icons.flag),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 20),
-              // Total price
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Total:',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '\$${totalPrice.toStringAsFixed(2)}',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              SizedBox(height: 20),
-              // Proceed to payment button
-              ElevatedButton(
-                onPressed: () {
-                  // Validate inputs
-                  if (phoneController.text.isEmpty ||
-                      addressController.text.isEmpty ||
-                      cityController.text.isEmpty ||
-                      countryController.text.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Please fill all required fields.")),
                     );
-                    return;
-                  }
-
-                  // Navigate to the payment page with shipping details
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PaymentPage(
-                        shippingDetails: {
-                          'phone': phoneController.text,
-                          'address': addressController.text,
-                          'street': streetController.text,
-                          'city': cityController.text,
-                          'country': countryController.text,
-                        },
+                  },
+                ),
+                Divider(),
+                // Shipping details form
+                TextField(
+                  controller: phoneController,
+                  decoration: InputDecoration(
+                    labelText: 'Phone Number',
+                    prefixIcon: Icon(Icons.phone),
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.phone,
+                ),
+                SizedBox(height: 16),
+                TextField(
+                  controller: addressController,
+                  decoration: InputDecoration(
+                    labelText: 'Address',
+                    prefixIcon: Icon(Icons.location_on),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                SizedBox(height: 16),
+                TextField(
+                  controller: streetController,
+                  decoration: InputDecoration(
+                    labelText: 'Street Address (Optional)',
+                    prefixIcon: Icon(Icons.streetview),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: cityController,
+                        decoration: InputDecoration(
+                          labelText: 'City',
+                          prefixIcon: Icon(Icons.location_city),
+                          border: OutlineInputBorder(),
+                        ),
                       ),
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  minimumSize: Size(double.infinity, 50),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: countryController,
+                        decoration: InputDecoration(
+                          labelText: 'Country',
+                          prefixIcon: Icon(Icons.flag),
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                child: Text(
-                  'Proceed to Payment',
-                  style: TextStyle(fontSize: 18),
+                SizedBox(height: 20),
+                // Total price
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Total:',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      '\$${totalPrice.toStringAsFixed(2)}',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                SizedBox(height: 20),
+                // Proceed to payment button
+                ElevatedButton(
+                  onPressed: () {
+                    // Validate inputs
+                    if (phoneController.text.isEmpty ||
+                        addressController.text.isEmpty ||
+                        cityController.text.isEmpty ||
+                        countryController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text("Please fill all required fields.")),
+                      );
+                      return;
+                    }
+
+                    // Navigate to the payment page with shipping details
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PaymentPage(
+                          shippingDetails: {
+                            'phone': phoneController.text,
+                            'address': addressController.text,
+                            'street': streetController.text,
+                            'city': cityController.text,
+                            'country': countryController.text,
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    minimumSize: Size(double.infinity, 50),
+                  ),
+                  child: Text(
+                    'Proceed to Payment',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      );
-    },
-  );
-}
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

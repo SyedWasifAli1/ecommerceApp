@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:go_router/go_router.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -39,7 +40,8 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     } else {
       // If no user is logged in, navigate to Login screen
-      Navigator.pushReplacementNamed(context, '/login');
+      // Navigator.pushReplacementNamed(context, '/login');
+      GoRouter.of(context).go('/login');
     }
   }
 
@@ -47,7 +49,8 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: CircularProgressIndicator(),  // Show loading indicator while checking
+        child:
+            CircularProgressIndicator(), // Show loading indicator while checking
       ),
     );
   }

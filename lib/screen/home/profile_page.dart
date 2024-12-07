@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_router/go_router.dart';
 
 class ProfilePage extends StatelessWidget {
   @override
@@ -106,7 +107,8 @@ class ProfilePage extends StatelessWidget {
       await prefs.remove('uid');
 
       // Navigate back to login screen
-      Navigator.pushReplacementNamed(context, '/login');
+      // Navigator.pushReplacementNamed(context, '/login');
+      GoRouter.of(context).go('/login');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Sign Out failed: ${e.toString()}')),

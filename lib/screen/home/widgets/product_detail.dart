@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart'; // Import go_router
-
+import 'package:firebase_auth/firebase_auth.dart';
 class ProductDetailPage extends StatefulWidget {
   final String productId;
 
@@ -65,32 +65,54 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   // Add the product to the cart
-  Future<void> _addToCart() async {
-    if (product!['stock'] <= 0) {
+Future<void> _addToCart() async {
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Out of stock')),
+        SnackBar(content: Text('Please log in to add items to the cart.')),
       );
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    List<String>? cartItems = prefs.getStringList('cartItems') ?? [];
+    final cartRef = FirebaseFirestore.instance
+        .collection('cart')
+        .doc(user.uid)
+        .collection('products');
 
-    if (!cartItems.contains(widget.productId)) {
-      cartItems.add(widget.productId);
-      await prefs.setStringList('cartItems', cartItems);
-      setState(() {
-        isAddedToCart = true;
-      });
+    final productId = widget.productId;
+
+    // Check if the product is already in the cart
+    final existingProduct = await cartRef.doc(productId).get();
+    if (existingProduct.exists) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Added to Cart')),
+        SnackBar(content: Text('Product is already in the cart.')),
       );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Already added to Cart')),
-      );
+      return;
     }
+
+    // Add product to the cart
+    await cartRef.doc(productId).set({
+      'name': product!['name'],
+      'price': product!['price'],
+      'quantity': 1, // Default quantity
+      'image': product!['images1']?.first, // Thumbnail image (if available)
+    });
+
+    setState(() {
+      isAddedToCart = true;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${product!['name']} added to cart!')),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed to add to cart: $e')),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {
