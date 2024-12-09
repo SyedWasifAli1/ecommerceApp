@@ -5,6 +5,8 @@ import 'package:ecommerce/screen/auth/SplashScreen.dart';
 import 'package:ecommerce/screen/auth/forget_password.dart';
 import 'package:ecommerce/screen/auth/mailer.dart';
 import 'package:ecommerce/screen/auth/otp.dart';
+import 'package:ecommerce/screen/auth/signin.dart';
+import 'package:ecommerce/screen/auth/welcome.dart';
 import 'package:ecommerce/screen/home/categories_products.dart';
 import 'package:ecommerce/screen/home/home_page.dart';
 import 'package:ecommerce/screen/home/home_screen.dart';
@@ -13,10 +15,11 @@ import 'package:ecommerce/screen/auth/login.dart';
 import 'package:ecommerce/screen/auth/signup.dart';
 import 'package:ecommerce/screen/home/widgets/demo_product_d.dart';
 import 'package:ecommerce/screen/home/widgets/product_detail.dart';
+import 'package:ecommerce/screen/home/widgets/search_result.dart';
 import 'package:ecommerce/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:go_router/go_router.dart';  // Import go_router
+import 'package:go_router/go_router.dart'; // Import go_router
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,18 +27,19 @@ void main() async {
     options: FirebaseOptions(
         apiKey: "AIzaSyBeGl5FJE-ZkGeSJ2c_8BZZ67gXdTyLVeI",
         authDomain: "authwithfirebase-20a41.firebaseapp.com",
-        databaseURL: "https://authwithfirebase-20a41-default-rtdb.firebaseio.com",
+        databaseURL:
+            "https://authwithfirebase-20a41-default-rtdb.firebaseio.com",
         projectId: "authwithfirebase-20a41",
         storageBucket: "authwithfirebase-20a41.appspot.com",
         messagingSenderId: "513334310836",
         appId: "1:513334310836:web:7090fa61046cd6f1dce4e1",
         measurementId: "G-11T09DTR7V"),
   );
-  runApp( MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-   MyApp({super.key});
+  MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -57,8 +61,12 @@ class MyApp extends StatelessWidget {
         builder: (context, state) => SplashScreen(),
       ),
       GoRoute(
-        path: '/login',
-        builder: (context, state) => LoginScreen(),
+        path: '/welcome',
+        builder: (context, state) => WelcomeScreen(),
+      ),
+      GoRoute(
+        path: '/signin',
+        builder: (context, state) => SignInScreen(),
       ),
       GoRoute(
         path: '/signup',
@@ -96,18 +104,31 @@ class MyApp extends StatelessWidget {
       GoRoute(
         path: '/product/:id', // Define path with dynamic parameter
         builder: (context, state) {
-          final String productId = state.pathParameters['id']!; // Retrieve productId from the URL
-          return ProductDetailPage(productId: productId); // Pass it to ProductDetailPage
+          final String productId =
+              state.pathParameters['id']!; // Retrieve productId from the URL
+          return ProductDetailPage(
+              productId: productId); // Pass it to ProductDetailPage
         },
       ),
-     GoRoute(
-  path: '/category/:id', // Define path with dynamic parameter
-  builder: (context, state) {
-    final String categoryId = state.pathParameters['id']!; // Retrieve categoryId from the URL
-    return CategoryDetailPage(categoryId: categoryId); // Pass categoryId to CategoryDetailPage
-  },
-),
 
+      GoRoute(
+        path: '/category/:id', // Define path with dynamic parameter
+        builder: (context, state) {
+          final String categoryId =
+              state.pathParameters['id']!; // Retrieve categoryId from the URL
+          return CategoryDetailPage(
+              categoryId: categoryId); // Pass categoryId to CategoryDetailPage
+        },
+      ),
+      GoRoute(
+        path: '/search',
+        builder: (BuildContext context, GoRouterState state) {
+          // Extract the query parameter from the URL
+          final query = state.pathParameters['query'] ??
+              ''; // Fallback to an empty string if query is missing
+          return SearchResultsPage(query: query);
+        },
+      ),
     ],
   );
 }

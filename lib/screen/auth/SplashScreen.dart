@@ -13,11 +13,16 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+    _startSplashScreen();
+  }
+
+  Future<void> _startSplashScreen() async {
+    // Delay for 5 seconds
+    await Future.delayed(Duration(seconds: 5));
     _checkLoginStatus();
   }
 
   Future<void> _checkLoginStatus() async {
-    // Check if user is logged in
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? uid = prefs.getString('uid');
 
@@ -35,22 +40,49 @@ class _SplashScreenState extends State<SplashScreen> {
         if (role == 'admin') {
           Navigator.pushReplacementNamed(context, '/homeadmin');
         } else {
-          Navigator.pushReplacementNamed(context, '/home');
+          GoRouter.of(context).go('/home');
         }
       }
     } else {
       // If no user is logged in, navigate to Login screen
-      // Navigator.pushReplacementNamed(context, '/login');
-      GoRouter.of(context).go('/login');
+      GoRouter.of(context).go('/welcome');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child:
-            CircularProgressIndicator(), // Show loading indicator while checking
+      body: Stack(
+        children: [
+          // Background Color
+          Positioned.fill(
+            child: Container(color: Colors.white),
+          ),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Splash Logo
+                Image.asset(
+                  'assets/images/logo.png', // Place your logo in assets/images
+                  width: 400,
+                  height: 300,
+                ),
+                SizedBox(height: 20),
+                // Text(
+                //   "Bazaaristan",
+                //   style: TextStyle(
+                //     fontSize: 24,
+                //     fontWeight: FontWeight.bold,
+                //     color: Colors.black,
+                //   ),
+                // ),
+                // SizedBox(height: 20),
+                // CircularProgressIndicator(), // Loading Indicator
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:ecommerce/screen/home/admin_dashboard.dart';
 import 'package:ecommerce/screen/home/widgets/buttom_navigator_bar.dart';
+import 'package:ecommerce/screen/home/widgets/custom_appbar';
 import 'package:flutter/material.dart';
 import 'home_page.dart';
 import 'categories_page.dart';
@@ -16,13 +17,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
+  int _currentIndex = 1;
 
   // List of customer pages
   final List<Widget> _customerPages = [
-    HomePage(),
-    CategoriesPage(),
     CartPage(),
+    HomePage(),
     ProfilePage(),
   ];
 
@@ -43,11 +43,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: widget.role == 'admin'
-            ? Text('Admin Dashboard')
-            : Text('Ecommerce App'),
-      ),
+      appBar: CustomAppBar(role: widget.role),
+
       body: widget.role == 'admin'
           ? _adminPages[_currentIndex] // Show admin pages
           : _customerPages[_currentIndex], // Show customer pages

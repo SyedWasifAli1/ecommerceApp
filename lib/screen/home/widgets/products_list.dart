@@ -1,17 +1,22 @@
-import 'dart:convert'; // Import this for base64Decode
-import 'dart:typed_data'; // Import this for Uint8List
-
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:ecommerce/screen/home/widgets/product_detail.dart';
+import 'dart:convert'; // For base64Decode
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
+import 'product_card.dart';
 
 class ProductList extends StatelessWidget {
-  // Fetch products list from Firestore
+  final int limit; // Add limit parameter to control number of products fetched
+
+  // Constructor with limit parameter
+  const ProductList({Key? key, required this.limit}) : super(key: key);
+
+  // Fetch products list from Firestore with dynamic limit
   Future<List<Map<String, dynamic>>> fetchProducts() async {
     try {
-      final querySnapshot =
-          await FirebaseFirestore.instance.collection('products').get();
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('products')
+          .limit(limit) // Use the limit passed in the constructor
+          .get();
 
       return querySnapshot.docs.map((doc) {
         var productData = doc.data();
@@ -39,18 +44,15 @@ class ProductList extends StatelessWidget {
             ? 4
             : screenWidth > 600
                 ? 3
-                : 3;
+                : limit; // Number of columns based on screen width
 
-    final childAspectRatio = screenWidth > 600 ? 0.7 : 0.7;
-
-    // Set responsive font sizes
-    double headingFontSize = screenWidth > 800 ? 18.0 : 10.0;
-    double priceFontSize = screenWidth > 800 ? 16.0 : 8.0;
+    final childAspectRatio =
+        screenWidth > 600 ? 0.7 : 0.8; // Adjust child aspect ratio
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: FutureBuilder<List<Map<String, dynamic>>>(
-        future: fetchProducts(),
+        future: fetchProducts(), // Fetch products with dynamic limit
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -62,96 +64,40 @@ class ProductList extends StatelessWidget {
               shrinkWrap: true,
               physics: NeverScrollableScrollPhysics(),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount,
+                crossAxisCount: crossAxisCount, // Dynamic number of columns
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                childAspectRatio: childAspectRatio,
+                childAspectRatio: childAspectRatio, // Dynamic aspect ratio
               ),
               itemCount: products.length,
               itemBuilder: (context, index) {
                 final product = products[index];
                 final thumbnails = product['images1'];
-                final productId = product['id']; // Define productId here
+                final productId = product['id'];
 
                 return GestureDetector(
                   onTap: () {
-                    GoRouter.of(context).go('/product/$productId');
-
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (context) =>
-                    // //         ProductDetailPage(productId: productId),
-                    //   ),
-                    // );
+                    // Navigate to Product Detail Page
+                    GoRouter.of(context).go(
+                      '/product/$productId', // Route with product ID
+                      extra: {
+                        'name': product['name'],
+                        'price': product['price'],
+                        'image': thumbnails.isNotEmpty ? thumbnails.first : ''
+                      }, // Pass additional details
+                    );
                   },
-                  child: Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: AspectRatio(
-                            aspectRatio: 1, // Ensures the image is square
-                            child: thumbnails.isNotEmpty
-                                ? Image.memory(
-                                    base64Decode(thumbnails.first),
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        color: Colors.grey,
-                                        child: Center(
-                                          child: Icon(
-                                            Icons.broken_image,
-                                            size: 48,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  )
-                                : Container(
-                                    color: Colors.grey,
-                                    child: Center(
-                                      child: Icon(
-                                        Icons.broken_image,
-                                        size: 48,
-                                      ),
-                                    ),
-                                  ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            product['name']!,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  fontSize: headingFontSize,
-                                ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Text(
-                            'Rs. ${product['price']}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall
-                                ?.copyWith(
-                                  color: Colors.blue,
-                                  fontSize: priceFontSize,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                        ),
-                      ],
-                    ),
+                  child: ProductCard(
+                    imageUrl: thumbnails.isNotEmpty
+                        ? 'data:image/png;base64,${thumbnails.first}'
+                        : '', // Base64 decoded image
+                    price: product['price'],
+                    onAddToCart: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text('${product['name']} added to cart!')),
+                      );
+                    },
                   ),
                 );
               },

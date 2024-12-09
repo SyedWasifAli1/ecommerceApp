@@ -45,20 +45,8 @@ class ProfilePage extends StatelessWidget {
               children: [
                 _buildListTile(
                   context,
-                  icon: Icons.person_outline,
-                  title: 'Profile',
-                  onTap: () {},
-                ),
-                _buildListTile(
-                  context,
-                  icon: Icons.shopping_bag_outlined,
-                  title: 'Orders',
-                  onTap: () {},
-                ),
-                _buildListTile(
-                  context,
                   icon: Icons.location_on_outlined,
-                  title: 'Delivery Info',
+                  title: 'Manage Address',
                   onTap: () {},
                 ),
                 _buildListTile(
@@ -108,7 +96,7 @@ class ProfilePage extends StatelessWidget {
 
       // Navigate back to login screen
       // Navigator.pushReplacementNamed(context, '/login');
-      GoRouter.of(context).go('/login');
+      GoRouter.of(context).go('/signin');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Sign Out failed: ${e.toString()}')),

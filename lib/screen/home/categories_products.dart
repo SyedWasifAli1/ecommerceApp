@@ -1,9 +1,10 @@
-import 'dart:convert'; // Import this for base64Decode
-import 'dart:typed_data'; // Import this for Uint8List
+import 'dart:convert'; // For base64Decode
+import 'dart:typed_data'; // For Uint8List
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ecommerce/screen/home/widgets/product_card.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart'; // Import go_router
+import 'package:go_router/go_router.dart'; // For navigation
 
 class CategoryDetailPage extends StatelessWidget {
   final String categoryId;
@@ -92,7 +93,14 @@ class CategoryDetailPage extends StatelessWidget {
                 child: Text("No products available in this category"));
           }
 
-          return ListView.builder(
+          return GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount:
+                  2, // Two items per row, you can adjust this as needed
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+            ),
+            padding: EdgeInsets.all(10),
             itemCount: products.length,
             itemBuilder: (context, index) {
               final product = products[index];
@@ -121,14 +129,14 @@ class CategoryDetailPage extends StatelessWidget {
                 }
               }
 
-              return ListTile(
-                title: Text(product['name']),
-                subtitle: Text('Rs. ${product['price']}'),
-                leading: imageBytesList.isNotEmpty
-                    ? Image.memory(imageBytesList[0], fit: BoxFit.cover)
-                    : Icon(Icons.image_not_supported),
-                onTap: () {
-                  // Handle product click if needed
+              return ProductCard(
+                imageUrl: imageBytesList.isNotEmpty
+                    ? 'data:image/png;base64,${base64Encode(imageBytesList[0])}'
+                    : '', // Convert base64 to URL format
+                price: product['price'].toString(),
+                onAddToCart: () {
+                  // Handle adding to cart functionality here
+                  print("Add to Cart clicked for ${product['name']}");
                 },
               );
             },

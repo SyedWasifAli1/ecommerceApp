@@ -17,6 +17,10 @@ class BottomNavigation extends StatelessWidget {
       currentIndex: currentIndex,
       onTap: onTap,
       type: BottomNavigationBarType.fixed,
+      backgroundColor: Colors.green, // Set background color to green
+      selectedItemColor: Colors.white, // Active icon and label color (white)
+      unselectedItemColor: Colors.white
+          .withOpacity(0.6), // Inactive items (slightly transparent white)
       items: isAdmin
           ? _adminNavigationItems() // Admin navigation
           : _customerNavigationItems(), // Customer navigation
@@ -49,16 +53,12 @@ class BottomNavigation extends StatelessWidget {
   List<BottomNavigationBarItem> _customerNavigationItems() {
     return [
       BottomNavigationBarItem(
-        icon: Icon(Icons.home),
-        label: 'Home',
-      ),
-      BottomNavigationBarItem(
-        icon: Icon(Icons.category),
-        label: 'Categories',
-      ),
-      BottomNavigationBarItem(
         icon: Icon(Icons.shopping_cart),
         label: 'Cart',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.home),
+        label: 'Home',
       ),
       BottomNavigationBarItem(
         icon: Icon(Icons.person),

@@ -335,76 +335,77 @@ class _CartPageState extends State<CartPage> {
         children: [
           // Display cart items
           Expanded(
-            child: ListView.builder(
-              itemCount: cartItems.length,
-              itemBuilder: (context, index) {
-                final item = cartItems[index];
-                return Card(
-                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: ListTile(
-                    leading: item['image'] != null
-                        ? Image.memory(
-                            item['image'],
-                            width: 40,
-                            height: 40,
-                            fit: BoxFit.cover,
-                          )
-                        : Icon(Icons.computer, size: 40),
-                    title: Text(
-                      item['name'],
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                    ),
-                    subtitle: Text('Quantity: ${item['quantity']}'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
+            child: cartItems.isEmpty
+                ? Center(child: CircularProgressIndicator())
+                : Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '\$${(item['price'] * item['quantity']).toStringAsFixed(2)}',
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            deleteItem(item['id']); // Delete logic
-                          },
-                        ),
-                        // Increase quantity
-                        IconButton(
-                          icon: Icon(Icons.add, color: Colors.green),
-                          onPressed: () {
-                            final newQuantity = item['quantity'] + 1;
-                            updateItemQuantity(item['id'],
-                                newQuantity); // Update quantity logic
-                          },
-                        ),
-                        // Decrease quantity
-                        IconButton(
-                          icon: Icon(Icons.remove, color: Colors.orange),
-                          onPressed: () {
-                            if (item['quantity'] > 1) {
-                              final newQuantity = item['quantity'] - 1;
-                              updateItemQuantity(item['id'],
-                                  newQuantity); // Update quantity logic
-                            }
-                          },
-                        ),
-                        // Checkbox to select item for checkout
-                        Checkbox(
-                          value: item['isSelected'],
-                          onChanged: (bool? newValue) {
-                            toggleItemSelection(item['id']); // Toggle selection
-                          },
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: cartItems.length,
+                            itemBuilder: (context, index) {
+                              final item = cartItems[index];
+
+                              return ListTile(
+                                leading: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Checkbox(
+                                      value: item['isSelected'],
+                                      onChanged: (bool? newValue) =>
+                                          toggleItemSelection(item['id']),
+                                      activeColor: Colors.green,
+                                    ),
+                                    item['image'] != null
+                                        ? Image.memory(
+                                            item['image'],
+                                            width: 30.0,
+                                            height: 30.0,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Icon(Icons.computer, size: 30.0),
+                                  ],
+                                ),
+                                title: Text(item['name']),
+                                subtitle: Text('Price: \$${item['price']}'),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(Icons.remove),
+                                      onPressed: () {
+                                        final quantity = item['quantity'] > 1
+                                            ? item['quantity'] - 1
+                                            : 1;
+                                        updateItemQuantity(
+                                            item['id'], quantity);
+                                      },
+                                    ),
+                                    Text(item['quantity'].toString()),
+                                    IconButton(
+                                      icon: Icon(Icons.add),
+                                      onPressed: () => updateItemQuantity(
+                                          item['id'], item['quantity'] + 1),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.delete),
+                                      onPressed: () => deleteItem(item['id']),
+                                    ),
+                                  ],
+                                ),
+                                onTap: () => toggleItemSelection(item['id']),
+                              );
+                            },
+                          ),
                         ),
                       ],
                     ),
                   ),
-                );
-              },
-            ),
           ),
           // Total price and checkout button
+
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
