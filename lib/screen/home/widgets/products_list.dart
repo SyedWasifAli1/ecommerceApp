@@ -50,7 +50,7 @@ class ProductList extends StatelessWidget {
         screenWidth > 600 ? 0.7 : 0.8; // Adjust child aspect ratio
 
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(10.0),
       child: FutureBuilder<List<Map<String, dynamic>>>(
         future: fetchProducts(), // Fetch products with dynamic limit
         builder: (context, snapshot) {

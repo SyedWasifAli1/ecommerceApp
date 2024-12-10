@@ -1,9 +1,10 @@
-import 'dart:convert'; // For base64Decode
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:go_router/go_router.dart'; // Import go_router
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
+
 class ProductDetailPage extends StatefulWidget {
   final String productId;
 
@@ -18,10 +19,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   Map<String, dynamic>? product;
   bool isLoading = true;
   bool isAddedToCart = false;
-  bool isOutOfStock = false;
+  int quantity = 1;
   int selectedImageIndex = 0;
 
-  // Fetch product details by ID from Firestore
   Future<void> fetchProductDetails() async {
     try {
       final productDoc = await FirebaseFirestore.instance
@@ -33,10 +33,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         setState(() {
           product = productDoc.data();
           isLoading = false;
-          isOutOfStock = product!['stock'] <= 0;
         });
 
-        // Check if product is already in the cart
         isAddedToCart = await _checkIfAddedToCart();
       } else {
         throw Exception("Product not found");
@@ -51,11 +49,55 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     }
   }
 
-  // Check if product is already added to the cart using SharedPreferences
   Future<bool> _checkIfAddedToCart() async {
     final prefs = await SharedPreferences.getInstance();
     List<String>? cartItems = prefs.getStringList('cartItems') ?? [];
     return cartItems.contains(widget.productId);
+  }
+
+  Future<void> _addToCart() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Please log in to add items to the cart.')),
+        );
+        return;
+      }
+
+      final cartRef = FirebaseFirestore.instance
+          .collection('cart')
+          .doc(user.uid)
+          .collection('products');
+
+      final existingProduct = await cartRef.doc(widget.productId).get();
+      if (existingProduct.exists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Product is already in the cart.')),
+        );
+        return;
+      }
+
+      await cartRef.doc(widget.productId).set({
+        'name': product!['name'],
+        'price': product!['price'],
+        'quantity': quantity,
+        'image': product!['images1']?.first,
+      });
+
+      setState(() {
+        isAddedToCart = true;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${product!['name']} added to cart!')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add to cart: $e')),
+      );
+    }
   }
 
   @override
@@ -63,56 +105,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     super.initState();
     fetchProductDetails();
   }
-
-  // Add the product to the cart
-Future<void> _addToCart() async {
-  try {
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please log in to add items to the cart.')),
-      );
-      return;
-    }
-
-    final cartRef = FirebaseFirestore.instance
-        .collection('cart')
-        .doc(user.uid)
-        .collection('products');
-
-    final productId = widget.productId;
-
-    // Check if the product is already in the cart
-    final existingProduct = await cartRef.doc(productId).get();
-    if (existingProduct.exists) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Product is already in the cart.')),
-      );
-      return;
-    }
-
-    // Add product to the cart
-    await cartRef.doc(productId).set({
-      'name': product!['name'],
-      'price': product!['price'],
-      'quantity': 1, // Default quantity
-      'image': product!['images1']?.first, // Thumbnail image (if available)
-    });
-
-    setState(() {
-      isAddedToCart = true;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${product!['name']} added to cart!')),
-    );
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Failed to add to cart: $e')),
-    );
-  }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -131,228 +123,277 @@ Future<void> _addToCart() async {
     }
 
     final images = product!['images1'] as List<dynamic>? ?? [];
-    final screenWidth = MediaQuery.of(context).size.width;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(product!['name'] ?? 'Product Details'),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            GoRouter.of(context).go('/home');
-          },
+    return DefaultTabController(
+      length: 4,
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              GoRouter.of(context).go('/home');
+            },
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.favorite_border),
+              onPressed: () {
+                // Add your favorite logic here
+              },
+            ),
+          ],
         ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: screenWidth > 800
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              ProductInfoSection(
+                product: product!,
+                selectedImageIndex: selectedImageIndex,
+                images: images,
+                onImageTap: (index) {
+                  setState(() {
+                    selectedImageIndex = index;
+                  });
+                },
+              ),
+              TabBar(
+                tabs: [
+                  Tab(text: 'Description'),
+                  Tab(text: 'Reviews'),
+                  Tab(text: 'Offers'),
+                  Tab(text: 'Policy'),
+                ],
+                labelColor: Colors.green,
+                unselectedLabelColor: Colors.black,
+                labelStyle:
+                    TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                indicatorColor: Colors.green,
+              ),
+              Expanded(
+                flex: 3,
+                child: TabBarView(
+                  children: [
+                    SingleChildScrollView(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(product!['description'] ??
+                          'No description available.'),
+                    ),
+                    Center(child: Text("Reviews")),
+                    Center(child: Text("Offers")),
+                    Center(child: Text("Policy")),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        floatingActionButton: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            // Quantity control with - and + buttons
+            Container(
+              // padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Image on the left
-                  Expanded(
-                    flex: 4,
-                    child: Column(
+                  // Minus button
+                  Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: images.isNotEmpty
-                              ? Image.memory(
-                                  base64Decode(images[selectedImageIndex]),
-                                  width: double.infinity,
-                                  height: 400,
-                                  fit: BoxFit.cover,
-                                )
-                              : Container(
-                                  height: 400,
-                                  color: Colors.grey,
-                                  child: Icon(
-                                    Icons.broken_image,
-                                    size: 48,
-                                  ),
-                                ),
+                        // Minus button
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              if (quantity > 1) {
+                                quantity--;
+                              }
+                            });
+                          },
+                          child: Container(
+                            height: 20,
+                            width: 20,
+                            alignment: Alignment.center,
+                            child: Icon(Icons.remove, color: Colors.white),
+                          ),
                         ),
-                        SizedBox(height: 16),
-                        // Thumbnails
-                        if (images.isNotEmpty)
-                          SizedBox(
-                            height: 100,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: images.length,
-                              itemBuilder: (context, index) {
-                                return GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      selectedImageIndex = index;
-                                    });
-                                  },
-                                  child: Container(
-                                    margin: const EdgeInsets.all(8.0),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: selectedImageIndex == index
-                                            ? Colors.blue
-                                            : Colors.transparent,
-                                        width: 2,
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Image.memory(
-                                        base64Decode(images[index]),
-                                        fit: BoxFit.cover,
-                                        width: 100,
-                                        height: 100,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
+                        SizedBox(
+                            width: 10), // Space between buttons and quantity
+                        // Quantity display
+                        Container(
+                          height: 30,
+                          width: 30,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '$quantity',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
                           ),
+                        ),
+                        SizedBox(
+                            width:
+                                10), // Space between quantity and plus button
+                        // Plus button
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              quantity++;
+                            });
+                          },
+                          child: Container(
+                            height: 20,
+                            width: 20,
+                            alignment: Alignment.center,
+                            child: Icon(Icons.add, color: Colors.white),
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-                  SizedBox(width: 24),
-                  // Product details on the right
-                  Expanded(
-                    flex: 6,
-                    child: _buildProductDetails(context),
-                  ),
-                ],
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: images.isNotEmpty
-                        ? Image.memory(
-                            base64Decode(images[selectedImageIndex]),
-                            width: screenWidth * 0.9,
-                            height: screenWidth * 0.6,
-                            fit: BoxFit.cover,
-                          )
-                        : Container(
-                            width: screenWidth * 0.9,
-                            height: screenWidth * 0.6,
-                            color: Colors.grey,
-                            child: Icon(
-                              Icons.broken_image,
-                              size: 48,
-                            ),
-                          ),
-                  ),
-                  SizedBox(height: 16),
-                  if (images.isNotEmpty)
-                    SizedBox(
-                      height: 100,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: images.length,
-                        itemBuilder: (context, index) {
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                selectedImageIndex = index;
-                              });
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.all(8.0),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: selectedImageIndex == index
-                                      ? Colors.blue
-                                      : Colors.transparent,
-                                  width: 2,
-                                ),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.memory(
-                                  base64Decode(images[index]),
-                                  fit: BoxFit.cover,
-                                  width: 100,
-                                  height: 100,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  SizedBox(height: 16),
-                  _buildProductDetails(context),
+                  )
                 ],
               ),
+            ),
+            SizedBox(
+                height: 10), // Space between controls and "Add to Cart" button
+
+            // Add to cart button
+            ElevatedButton.icon(
+              onPressed: _addToCart,
+              icon: Icon(Icons.shopping_cart, color: Colors.white, size: 24),
+              label: Text(
+                'Add to Cart',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18, // Increased font size
+                  color: Colors.white, // Set text color to white
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green, // Set background color to green
+                minimumSize: Size(180, 40), // Increased button size
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30), // Rounded corners
+                ),
+                elevation: 5, // Add slight elevation for depth
+              ),
+            ),
+            SizedBox(
+              height: 20,
+            )
+          ],
+        ),
       ),
     );
   }
+}
 
-  Widget _buildProductDetails(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          product!['name'] ?? 'No name available',
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
-        SizedBox(height: 8),
-        Row(
-          children: [
-            Text(
-              'Rs. ${product!['price']}',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.red,
-              ),
+class ProductInfoSection extends StatelessWidget {
+  final Map<String, dynamic> product;
+  final int selectedImageIndex;
+  final List<dynamic> images;
+  final ValueChanged<int> onImageTap;
+
+  const ProductInfoSection({
+    Key? key,
+    required this.product,
+    required this.selectedImageIndex,
+    required this.images,
+    required this.onImageTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (images.isNotEmpty)
+            Column(
+              children: [
+                SizedBox(
+                  height: 200,
+                  child: PageView.builder(
+                    controller: PageController(initialPage: selectedImageIndex),
+                    onPageChanged: (index) {
+                      onImageTap(index);
+                    },
+                    itemCount: images.length,
+                    itemBuilder: (context, index) {
+                      return ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.memory(
+                          base64Decode(images[index]),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(images.length, (index) {
+                    return GestureDetector(
+                      onTap: () {
+                        onImageTap(index);
+                      },
+                      child: Container(
+                        margin: EdgeInsets.symmetric(horizontal: 4),
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: selectedImageIndex == index
+                              ? Colors.green
+                              : Colors.grey,
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ],
             ),
-          ],
-        ),
-        SizedBox(height: 8),
-        Row(
-          children: [
-            Text(
-              'SKU: ${product!['sku']}',
-              style: TextStyle(fontSize: 16),
+          SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    product['name'] ?? 'No name available',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text(
+                  'Rs. ${product['price']}',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green),
+                ),
+              ],
             ),
-            SizedBox(width: 16),
-            Text(
-              'Category: ${product!['category']}',
-              style: TextStyle(fontSize: 16),
-            ),
-          ],
-        ),
-        SizedBox(height: 8),
-        Text(
-          'Weight: ${product!['weight']} kg',
-          style: TextStyle(fontSize: 16),
-        ),
-        SizedBox(height: 8),
-        Text(
-          'Stock: ${product!['stock']} units',
-          style: TextStyle(fontSize: 16),
-        ),
-        SizedBox(height: 24),
-        Text(
-          product!['description'] ?? 'No description available.',
-          style: TextStyle(fontSize: 16),
-        ),
-        SizedBox(height: 24),
-        isOutOfStock
-            ? Text(
-                'Out of stock',
-                style: TextStyle(color: Colors.red, fontSize: 18),
-              )
-            : ElevatedButton(
-                onPressed: isAddedToCart ? null : _addToCart,
-                child: Text(isAddedToCart ? 'Added to Cart' : 'Add to Cart'),
-              ),
-      ],
+          ),
+          SizedBox(height: 8),
+        ],
+      ),
     );
   }
 }

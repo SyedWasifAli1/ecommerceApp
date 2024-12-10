@@ -57,7 +57,7 @@ class AdminDashboardPage extends StatelessWidget {
                   title: 'products',
                   onTap: () {
                     Navigator.pushReplacementNamed(context, '/products');
-                    // Navigate to view orders page
+                    
                   },
                 ),
                 _buildListTile(

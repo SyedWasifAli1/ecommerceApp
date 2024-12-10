@@ -50,7 +50,7 @@ class _HomePageState extends State<HomePage> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => ProductList(
-                    limit: 10,
+                    limit: 3,
                   ),
                 ),
               );
@@ -69,7 +69,7 @@ class _HomePageState extends State<HomePage> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => ProductList(
-                    limit: 10,
+                    limit: 3,
                   ),
                 ),
               );
@@ -89,7 +89,7 @@ class _HomePageState extends State<HomePage> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => ProductList(
-                    limit: 10,
+                    limit: 3,
                   ),
                 ),
               );
@@ -109,7 +109,7 @@ class _HomePageState extends State<HomePage> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => ProductList(
-                    limit: 10,
+                    limit: 3,
                   ),
                 ),
               );
