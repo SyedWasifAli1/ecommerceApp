@@ -60,8 +60,14 @@ class _ProductsScreenState extends State<ProductsScreen> {
         reader.readAsArrayBuffer(files[0]);
         reader.onLoadEnd.listen((e) async {
           final Uint8List data = reader.result as Uint8List;
+
+          // Shortened Base64
+          final String encoded = base64Encode(data);
+          final String shortenedBase64 =
+              encoded.substring(0, 30); // 20-30 characters
+
           setState(() {
-            _thumbnailBase64 = base64Encode(data);
+            _thumbnailBase64 = shortenedBase64;
           });
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Thumbnail selected successfully")),
@@ -72,8 +78,14 @@ class _ProductsScreenState extends State<ProductsScreen> {
       final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
       if (image != null) {
         Uint8List data = await image.readAsBytes();
+
+        // Shortened Base64
+        final String encoded = base64Encode(data);
+        final String shortenedBase64 =
+            encoded.substring(0, 30); // 20-30 characters
+
         setState(() {
-          _thumbnailBase64 = base64Encode(data);
+          _thumbnailBase64 = shortenedBase64;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Thumbnail selected successfully")),
@@ -81,6 +93,43 @@ class _ProductsScreenState extends State<ProductsScreen> {
       }
     }
   }
+
+  // Future<void> pickThumbnail() async {
+  //   if (kIsWeb) {
+  //     final html.FileUploadInputElement uploadInput =
+  //         html.FileUploadInputElement();
+  //     uploadInput.accept = 'image/*';
+  //     uploadInput.click();
+
+  //     uploadInput.onChange.listen((e) async {
+  //       final files = uploadInput.files;
+  //       if (files!.isEmpty) return;
+
+  //       final reader = html.FileReader();
+  //       reader.readAsArrayBuffer(files[0]);
+  //       reader.onLoadEnd.listen((e) async {
+  //         final Uint8List data = reader.result as Uint8List;
+  //         setState(() {
+  //           _thumbnailBase64 = base64Encode(data);
+  //         });
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           const SnackBar(content: Text("Thumbnail selected successfully")),
+  //         );
+  //       });
+  //     });
+  //   } else {
+  //     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+  //     if (image != null) {
+  //       Uint8List data = await image.readAsBytes();
+  //       setState(() {
+  //         _thumbnailBase64 = base64Encode(data);
+  //       });
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text("Thumbnail selected successfully")),
+  //       );
+  //     }
+  //   }
+  // }
 
   // Image picker logic for product images (multiple images)
   Future<void> pickImages() async {

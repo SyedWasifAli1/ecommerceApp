@@ -43,11 +43,15 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(role: widget.role),
+      appBar:
+          (_currentIndex != 2) // Check if the current page is not ProfilePage
+              ? CustomAppBar(role: widget.role)
+              : null, // No AppBar on ProfilePage
 
       body: widget.role == 'admin'
           ? _adminPages[_currentIndex] // Show admin pages
           : _customerPages[_currentIndex], // Show customer pages
+
       bottomNavigationBar: BottomNavigation(
         currentIndex: _currentIndex,
         onTap: _onItemTapped,

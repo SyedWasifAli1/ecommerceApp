@@ -15,7 +15,7 @@ class ProductList extends StatelessWidget {
     try {
       final querySnapshot = await FirebaseFirestore.instance
           .collection('products')
-          .limit(limit) // Use the limit passed in the constructor
+          .limit(10) // Use the limit passed in the constructor
           .get();
 
       return querySnapshot.docs.map((doc) {
@@ -38,16 +38,18 @@ class ProductList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+
+    // Determine card width and aspect ratio based on screen width
     final crossAxisCount = screenWidth > 1200
         ? 6
         : screenWidth > 800
             ? 4
             : screenWidth > 600
                 ? 3
-                : limit; // Number of columns based on screen width
+                : limit;
 
-    final childAspectRatio =
-        screenWidth > 600 ? 0.7 : 0.8; // Adjust child aspect ratio
+    final cardWidth = screenWidth / crossAxisCount - 16; // Account for spacing
+    final childAspectRatio = screenWidth > 600 ? 0.7 : 0.8;
 
     return Padding(
       padding: const EdgeInsets.all(10.0),
@@ -60,47 +62,51 @@ class ProductList extends StatelessWidget {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (snapshot.hasData) {
             var products = snapshot.data!;
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount, // Dynamic number of columns
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: childAspectRatio, // Dynamic aspect ratio
-              ),
-              itemCount: products.length,
-              itemBuilder: (context, index) {
-                final product = products[index];
-                final thumbnails = product['images1'];
-                final productId = product['id'];
+            return SizedBox(
+              height: cardWidth * childAspectRatio, // Dynamic card height
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal, // Horizontal sliding
+                itemCount: products.length,
+                itemBuilder: (context, index) {
+                  final product = products[index];
+                  final thumbnails = product['images1'];
+                  final productId = product['id'];
 
-                return GestureDetector(
-                  onTap: () {
-                    // Navigate to Product Detail Page
-                    GoRouter.of(context).go(
-                      '/product/$productId', // Route with product ID
-                      extra: {
-                        'name': product['name'],
-                        'price': product['price'],
-                        'image': thumbnails.isNotEmpty ? thumbnails.first : ''
-                      }, // Pass additional details
-                    );
-                  },
-                  child: ProductCard(
-                    imageUrl: thumbnails.isNotEmpty
-                        ? 'data:image/png;base64,${thumbnails.first}'
-                        : '', // Base64 decoded image
-                    price: product['price'],
-                    onAddToCart: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text('${product['name']} added to cart!')),
+                  return GestureDetector(
+                    onTap: () {
+                      // Navigate to Product Detail Page
+                      GoRouter.of(context).go(
+                        '/product/$productId', // Route with product ID
+                        extra: {
+                          'name': product['name'],
+                          'price': product['price'],
+                          'image': thumbnails.isNotEmpty ? thumbnails.first : ''
+                        }, // Pass additional details
                       );
                     },
-                  ),
-                );
-              },
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                          right: 16.0), // Spacing between cards
+                      child: SizedBox(
+                        width: cardWidth, // Dynamic card width
+                        child: ProductCard(
+                          imageUrl: thumbnails.isNotEmpty
+                              ? 'data:image/png;base64,${thumbnails.first}'
+                              : '', // Base64 decoded image
+                          price: product['price'],
+                          onAddToCart: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text(
+                                      '${product['name']} added to cart!')),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
             );
           } else {
             return const Center(child: Text('No products found.'));

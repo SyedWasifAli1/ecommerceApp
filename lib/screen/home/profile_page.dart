@@ -9,40 +9,95 @@ class ProfilePage extends StatelessWidget {
     return Scaffold(
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24.0),
+          // Top Section with Profile Info
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.green, // Background color for the top section
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(30), // Bottom left corner rounded
+                bottomRight: Radius.circular(30), // Bottom right corner rounded
+              ),
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                // Back Button and Edit Profile Button in Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        // Navigate to Edit Profile
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.green,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      child: Text('Edit Profile'),
+                    ),
+                  ],
+                ),
+                // Profile Avatar
                 CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Colors.grey[300],
-                  child: Icon(
-                    Icons.person,
-                    size: 50,
-                    color: Colors.grey[700],
-                  ),
+                  radius: 50,
+                  // backgroundColor: Colors.white,
+                  backgroundImage: AssetImage('assets/images/profile.png'),
                 ),
-                SizedBox(height: 16),
+
+                // CircleAvatar(
+                //   radius: 50,
+                //   backgroundColor: Colors.white,
+                //   child: Icon(
+                //     Icons.person,
+                //     size: 60,
+                //     color: Colors.grey,
+                //   ),
+                // ),
+
+                SizedBox(height: 6),
+                // Profile Name
                 Text(
-                  'Sameera Perera',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'sameera@gmail.com',
+                  'XYZ Name',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey[600],
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 4),
+                // Email
+                Text(
+                  'xyz@123gmail.com',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white70,
                   ),
                 ),
               ],
             ),
           ),
+          SizedBox(height: 40),
+          // Tiles Section
+
           Expanded(
             child: ListView(
               children: [
+                _buildListTile(
+                  context,
+                  icon: Icons.local_shipping_outlined,
+                  title: 'Upcoming Orders',
+                  onTap: () {},
+                ),
                 _buildListTile(
                   context,
                   icon: Icons.location_on_outlined,
@@ -51,30 +106,23 @@ class ProfilePage extends StatelessWidget {
                 ),
                 _buildListTile(
                   context,
-                  icon: Icons.settings_outlined,
-                  title: 'Settings',
+                  icon: Icons.payment_outlined,
+                  title: 'Update Payment',
                   onTap: () {},
                 ),
                 _buildListTile(
                   context,
-                  icon: Icons.notifications_outlined,
-                  title: 'Notifications',
+                  icon: Icons.chat_bubble_outline,
+                  title: 'My Chats',
                   onTap: () {},
                 ),
                 _buildListTile(
                   context,
-                  icon: Icons.info_outline,
-                  title: 'About',
-                  onTap: () {},
-                ),
-                _buildListTile(
-                  context,
-                  icon: Icons.logout,
+                  icon: Icons.chat_bubble_outline,
                   title: 'Sign Out',
-                  onTap: () async {
-                    await _signOut(context);
+                  onTap: () {
+                    _signOut(context);
                   },
-                  isSignOut: true,
                 ),
               ],
             ),
@@ -95,7 +143,6 @@ class ProfilePage extends StatelessWidget {
       await prefs.remove('uid');
 
       // Navigate back to login screen
-      // Navigator.pushReplacementNamed(context, '/login');
       GoRouter.of(context).go('/signin');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -107,31 +154,30 @@ class ProfilePage extends StatelessWidget {
   Widget _buildListTile(BuildContext context,
       {required IconData icon,
       required String title,
-      required VoidCallback onTap,
-      bool isSignOut = false}) {
+      required VoidCallback onTap}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: ListTile(
         onTap: onTap,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
         ),
-        tileColor: Colors.grey[200],
+        tileColor: Colors.grey[100],
         leading: Icon(
           icon,
-          color: isSignOut ? Colors.red : Colors.black,
+          color: Colors.black,
         ),
         title: Text(
           title,
           style: TextStyle(
             fontSize: 16,
-            color: isSignOut ? Colors.red : Colors.black,
+            color: Colors.black,
           ),
         ),
         trailing: Icon(
           Icons.arrow_forward_ios,
           size: 16,
-          color: Colors.grey[600],
+          color: Colors.grey,
         ),
       ),
     );

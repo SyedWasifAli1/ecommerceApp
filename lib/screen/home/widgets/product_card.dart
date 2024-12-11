@@ -52,7 +52,7 @@ class ProductCard extends StatelessWidget {
               child: imageUrl.isNotEmpty
                   ? Image.network(
                       imageUrl,
-                      fit: BoxFit.cover,
+                      // fit: BoxFit.cover,
                     )
                   : Center(
                       child: Text(
