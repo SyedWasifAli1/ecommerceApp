@@ -2,31 +2,61 @@ import 'dart:convert'; // For base64Decode
 import 'dart:typed_data'; // For Uint8List
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:ecommerce/screen/admin/categries/detail.dart';
 import 'package:ecommerce/screen/home/widgets/product_card.dart';
+import 'package:ecommerce/screen/home/widgets/product_detail.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart'; // For navigation
 
 class CategoryDetailPage extends StatelessWidget {
   final String categoryId;
+  final String subCategoryId;
 
-  CategoryDetailPage({Key? key, required this.categoryId}) : super(key: key);
+  CategoryDetailPage(
+      {Key? key, required this.categoryId, required this.subCategoryId})
+      : super(key: key);
 
   // Fetch category details by categoryId
-  Future<String> fetchCategoryName() async {
+  Future<Map<String, String>> fetchCategoryAndSubCategoryNames() async {
     try {
+      // Fetch category name
       final categoryDoc = await FirebaseFirestore.instance
-          .collection('categories')
-          .doc(categoryId) // Fetch category by ID
+          .collection('category')
+          .doc(categoryId)
           .get();
 
       if (categoryDoc.exists) {
-        return categoryDoc['title'] ?? 'Unknown Category';
+        // Fetch sub-category name by ID
+        final subCategoryDoc = await FirebaseFirestore.instance
+            .collection('category')
+            .doc(categoryId)
+            .collection('sub_categories')
+            .doc(subCategoryId)
+            .get();
+
+        if (subCategoryDoc.exists) {
+          return {
+            'categoryName': categoryDoc['name'] ?? 'Unknown Category',
+            'subCategoryName': subCategoryDoc['name'] ?? 'Unknown Sub-category',
+          };
+        } else {
+          return {
+            'categoryName': categoryDoc['name'] ?? 'Unknown Category',
+            'subCategoryName': 'Sub-category Not Found',
+          };
+        }
       } else {
-        return 'Category Not Found';
+        return {
+          'categoryName': 'Category Not Found',
+          'subCategoryName': 'Sub-category Not Found',
+        };
       }
     } catch (e) {
-      print('Error fetching category name: $e');
-      return 'Error fetching category name';
+      print('Error fetching category and sub-category names: $e');
+      return {
+        'categoryName': 'Error fetching category name',
+        'subCategoryName': 'Error fetching sub-category name',
+      };
     }
   }
 
@@ -34,7 +64,7 @@ class CategoryDetailPage extends StatelessWidget {
   Stream<List<Map<String, dynamic>>> fetchProductsByCategory() {
     return FirebaseFirestore.instance
         .collection('products')
-        .where('category', isEqualTo: categoryId) // Filter by categoryId
+        .where('sub_category', isEqualTo: subCategoryId)
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {
@@ -42,7 +72,7 @@ class CategoryDetailPage extends StatelessWidget {
           'id': doc.id,
           'name': doc['name'] ?? '',
           'price': doc['price'] ?? 0,
-          'images1': doc['images1'] ?? [], // Default to an empty list if null
+          'images1': doc['images1'] ?? [],
         };
       }).toList();
     });
@@ -52,8 +82,8 @@ class CategoryDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: FutureBuilder<String>(
-          future: fetchCategoryName(), // Fetch category name
+        title: FutureBuilder<Map<String, String>>(
+          future: fetchCategoryAndSubCategoryNames(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Text('Loading...');
@@ -63,19 +93,31 @@ class CategoryDetailPage extends StatelessWidget {
               return Text('Error: ${snapshot.error}');
             }
 
-            // Display category name in the app bar
-            return Text(snapshot.data ?? 'Category Details');
+            if (snapshot.hasData) {
+              final categoryName =
+                  snapshot.data?['categoryName'] ?? 'Unknown Category';
+              final subCategoryName =
+                  snapshot.data?['subCategoryName'] ?? 'Unknown Sub-category';
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('$categoryName : $subCategoryName'),
+                ],
+              );
+            }
+
+            return Text('No data available');
           },
         ),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            GoRouter.of(context).go('/home');
+            Navigator.pop(context); // Use Navigator.pop() to go back
           },
         ),
       ),
       body: StreamBuilder<List<Map<String, dynamic>>>(
-        // Fetch products
         stream: fetchProductsByCategory(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -110,7 +152,6 @@ class CategoryDetailPage extends StatelessWidget {
               List<Uint8List> imageBytesList = [];
 
               if (images is List) {
-                // If images is a list, decode each item (assuming base64 strings)
                 for (var image in images) {
                   if (image is String && image.isNotEmpty) {
                     try {
@@ -121,7 +162,6 @@ class CategoryDetailPage extends StatelessWidget {
                   }
                 }
               } else if (images is String && images.isNotEmpty) {
-                // If images is a single base64 string, decode it
                 try {
                   imageBytesList.add(base64Decode(images));
                 } catch (e) {
@@ -129,15 +169,27 @@ class CategoryDetailPage extends StatelessWidget {
                 }
               }
 
-              return ProductCard(
-                imageUrl: imageBytesList.isNotEmpty
-                    ? 'data:image/png;base64,${base64Encode(imageBytesList[0])}'
-                    : '', // Convert base64 to URL format
-                price: product['price'].toString(),
-                onAddToCart: () {
-                  // Handle adding to cart functionality here
-                  print("Add to Cart clicked for ${product['name']}");
+              return GestureDetector(
+                onTap: () {
+                  // Handle navigation on card tap
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ProductDetailPage(
+                        productId: product['id'],
+                      ),
+                    ),
+                  );
                 },
+                child: ProductCard(
+                  imageUrl: imageBytesList.isNotEmpty
+                      ? 'data:image/png;base64,${base64Encode(imageBytesList[0])}'
+                      : '', // Convert base64 to URL format if images are found
+                  price: product['price'].toString(),
+                  onAddToCart: () {
+                    print("Add to Cart clicked for ${product['name']}");
+                  },
+                ),
               );
             },
           );

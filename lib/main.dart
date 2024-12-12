@@ -1,6 +1,7 @@
 import 'package:ecommerce/screen/admin/categries/categories_view.dart';
 import 'package:ecommerce/screen/admin/categries/pro.dart';
 import 'package:ecommerce/screen/admin/categries/products.dart';
+import 'package:ecommerce/screen/admin/categries/sub_categries.dart';
 import 'package:ecommerce/screen/auth/SplashScreen.dart';
 import 'package:ecommerce/screen/auth/forget_password.dart';
 import 'package:ecommerce/screen/auth/mailer.dart';
@@ -97,8 +98,12 @@ class MyApp extends StatelessWidget {
         builder: (context, state) => ProfilePage(),
       ),
       GoRoute(
-        path: '/cate',
+        path: '/subcate',
         builder: (context, state) => AddCategoryScreen(),
+      ),
+      GoRoute(
+        path: '/cate',
+        builder: (context, state) => CategoriesScreen(),
       ),
       GoRoute(
         path: '/products',
@@ -127,15 +132,15 @@ class MyApp extends StatelessWidget {
         },
       ),
 
-      GoRoute(
-        path: '/category/:id', // Define path with dynamic parameter
-        builder: (context, state) {
-          final String categoryId =
-              state.pathParameters['id']!; // Retrieve categoryId from the URL
-          return CategoryDetailPage(
-              categoryId: categoryId); // Pass categoryId to CategoryDetailPage
-        },
-      ),
+      // GoRoute(
+      //   path: '/category/:id', // Define path with dynamic parameter
+      //   builder: (context, state) {
+      //     final String categoryId =
+      //         state.pathParameters['id']!; // Retrieve categoryId from the URL
+      //     return CategoryDetailPage(
+      //         categoryId: categoryId); // Pass categoryId to CategoryDetailPage
+      //   },
+      // ),
       GoRoute(
         path: '/search',
         builder: (BuildContext context, GoRouterState state) {

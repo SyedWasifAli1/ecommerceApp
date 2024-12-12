@@ -13,6 +13,13 @@ class Category {
   Category({required this.id, required this.name});
 }
 
+class SubCategory {
+  final String id;
+  final String name;
+
+  SubCategory({required this.id, required this.name});
+}
+
 class ProductsScreen extends StatefulWidget {
   const ProductsScreen({Key? key}) : super(key: key);
 
@@ -23,6 +30,7 @@ class ProductsScreen extends StatefulWidget {
 class _ProductsScreenState extends State<ProductsScreen> {
   final _formKey = GlobalKey<FormState>();
   String? _selectedCategory;
+  String? _selectedSubCategory;
   String _sku = '';
   String _name = '';
   double _price = 0.0;
@@ -37,10 +45,28 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
   // Fetch categories for dropdown
   Future<List<Category>> fetchCategories() async {
-    final snapshot =
-        await FirebaseFirestore.instance.collection('categories').get();
+    final snapshot = await FirebaseFirestore.instance.collection('category').get();
     return snapshot.docs.map((doc) {
-      return Category(id: doc.id, name: doc['title'].toString());
+      return Category(
+        id: doc.id,
+        name: doc['name'],
+      );
+    }).toList();
+  }
+
+  // Fetch sub-categories for a specific category
+  Future<List<SubCategory>> fetchSubCategories(String categoryId) async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('category')
+        .doc(categoryId)
+        .collection('sub_categories')
+        .get();
+
+    return snapshot.docs.map((doc) {
+      return SubCategory(
+        id: doc.id,
+        name: doc['name'],
+      );
     }).toList();
   }
 
@@ -94,43 +120,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
     }
   }
 
-  // Future<void> pickThumbnail() async {
-  //   if (kIsWeb) {
-  //     final html.FileUploadInputElement uploadInput =
-  //         html.FileUploadInputElement();
-  //     uploadInput.accept = 'image/*';
-  //     uploadInput.click();
-
-  //     uploadInput.onChange.listen((e) async {
-  //       final files = uploadInput.files;
-  //       if (files!.isEmpty) return;
-
-  //       final reader = html.FileReader();
-  //       reader.readAsArrayBuffer(files[0]);
-  //       reader.onLoadEnd.listen((e) async {
-  //         final Uint8List data = reader.result as Uint8List;
-  //         setState(() {
-  //           _thumbnailBase64 = base64Encode(data);
-  //         });
-  //         ScaffoldMessenger.of(context).showSnackBar(
-  //           const SnackBar(content: Text("Thumbnail selected successfully")),
-  //         );
-  //       });
-  //     });
-  //   } else {
-  //     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-  //     if (image != null) {
-  //       Uint8List data = await image.readAsBytes();
-  //       setState(() {
-  //         _thumbnailBase64 = base64Encode(data);
-  //       });
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(content: Text("Thumbnail selected successfully")),
-  //       );
-  //     }
-  //   }
-  // }
-
   // Image picker logic for product images (multiple images)
   Future<void> pickImages() async {
     if (kIsWeb) {
@@ -152,8 +141,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
           reader.readAsArrayBuffer(file);
           reader.onLoadEnd.listen((e) async {
             final Uint8List data = reader.result as Uint8List;
-            selectedImages
-                .add(base64Encode(data)); // Add base64 image to the list
+            selectedImages.add(base64Encode(data)); // Add base64 image to the list
 
             // Update the state only when all images are processed
             if (selectedImages.length == files.length) {
@@ -175,8 +163,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
         for (var image in images) {
           Uint8List data = await image.readAsBytes();
-          selectedImages
-              .add(base64Encode(data)); // Convert to base64 and add to list
+          selectedImages.add(base64Encode(data)); // Convert to base64 and add to list
         }
 
         setState(() {
@@ -208,6 +195,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
           'thumbnail': _thumbnailBase64,
           'images1': _imagesBase64,
           'category': _selectedCategory,
+          'sub_category': _selectedSubCategory,
           'stock': _stock,
           'create_date': DateTime.now(),
         });
@@ -276,28 +264,57 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 value: _selectedCategory,
                 items: categories.map((category) {
                   return DropdownMenuItem<String>(
-                    value: category.id, // Store category ID
-                    child: Text(category.name), // Display category name
+                    value: category.id,
+                    child: Text(category.name),
                   );
                 }).toList(),
-                onChanged: (value) => setState(() => _selectedCategory = value),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCategory = value;
+                    _selectedSubCategory = null; // Reset sub-category when category changes
+                  });
+                },
                 decoration: const InputDecoration(labelText: "Category"),
                 validator: (value) =>
                     value == null ? "Please select a category" : null,
               );
             },
           ),
-          const SizedBox(height: 20),
+          if (_selectedCategory != null)
+            FutureBuilder<List<SubCategory>>(
+              future: fetchSubCategories(_selectedCategory!),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                }
+                if (snapshot.hasError) {
+                  return Text("Error: ${snapshot.error}");
+                }
+
+                final subCategories = snapshot.data ?? [];
+                return DropdownButtonFormField<String>(
+                  value: _selectedSubCategory,
+                  items: subCategories.map((subCategory) {
+                    return DropdownMenuItem<String>(
+                      value: subCategory.id,
+                      child: Text(subCategory.name),
+                    );
+                  }).toList(),
+                  onChanged: (value) => setState(() => _selectedSubCategory = value),
+                  decoration: const InputDecoration(labelText: "Sub-Category"),
+                  validator: (value) =>
+                      value == null ? "Please select a sub-category" : null,
+                );
+              },
+            ),
           ElevatedButton(
             onPressed: pickThumbnail,
             child: const Text("Select Thumbnail"),
           ),
-          const SizedBox(height: 20),
           ElevatedButton(
             onPressed: pickImages,
-            child: const Text("Select Product Images"),
+            child: const Text("Select Images"),
           ),
-          const SizedBox(height: 20),
           ElevatedButton(
             onPressed: addProduct,
             child: _isLoading
@@ -312,8 +329,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Add Product")),
-      body: buildProductForm(),
+      appBar: AppBar(title: const Text('Add Product')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: buildProductForm(),
+      ),
     );
   }
 }
+

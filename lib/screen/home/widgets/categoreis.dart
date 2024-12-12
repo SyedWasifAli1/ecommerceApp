@@ -1,3 +1,4 @@
+import 'package:ecommerce/screen/home/widgets/sub_categroies.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -12,13 +13,13 @@ class _CategoryPageState extends State<CategoryPage> {
 
   // Stream to fetch categories from Firestore
   Stream<List<Map<String, String>>> fetchCategories() {
-    return FirebaseFirestore.instance.collection('categories').snapshots().map(
+    return FirebaseFirestore.instance.collection('category').snapshots().map(
       (snapshot) {
         return snapshot.docs.map((doc) {
           // Convert each field to String explicitly
           return {
             "id": doc.id, // Get the document ID for navigation
-            "name": (doc['title'] ?? '').toString(),
+            "name": (doc['name'] ?? '').toString(),
           };
         }).toList();
       },
@@ -87,8 +88,15 @@ class _CategoryPageState extends State<CategoryPage> {
                         selectedCategoryId = category["id"]!;
                       });
 
-                      // Navigate to the CategoryDetailPage with category ID
-                      GoRouter.of(context).go('/category/${category["id"]}');
+                      // Navigate to the SubCategoriesPage with category ID
+                      // GoRouter.of(context).go('/category/${category["id"]}');
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              SubCategoriesPage(categoryId: category["id"]!),
+                        ),
+                      );
                     },
                     selectedColor: Colors.green,
                     backgroundColor: Colors.grey[200],

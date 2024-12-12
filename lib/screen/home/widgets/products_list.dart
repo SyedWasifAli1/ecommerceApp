@@ -1,4 +1,5 @@
 import 'dart:convert'; // For base64Decode
+import 'package:ecommerce/screen/home/widgets/product_detail.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
@@ -49,7 +50,7 @@ class ProductList extends StatelessWidget {
                 : limit;
 
     final cardWidth = screenWidth / crossAxisCount - 16; // Account for spacing
-    final childAspectRatio = screenWidth > 600 ? 0.7 : 0.8;
+    final childAspectRatio = screenWidth > 600 ? 0.7 : 1.0;
 
     return Padding(
       padding: const EdgeInsets.all(10.0),
@@ -75,18 +76,26 @@ class ProductList extends StatelessWidget {
                   return GestureDetector(
                     onTap: () {
                       // Navigate to Product Detail Page
-                      GoRouter.of(context).go(
-                        '/product/$productId', // Route with product ID
-                        extra: {
-                          'name': product['name'],
-                          'price': product['price'],
-                          'image': thumbnails.isNotEmpty ? thumbnails.first : ''
-                        }, // Pass additional details
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProductDetailPage(
+                            productId: product['id'],
+                          ),
+                        ),
                       );
+                      // GoRouter.of(context).go(
+                      //   '/product/$productId', // Route with product ID
+                      //   extra: {
+                      //     'name': product['name'],
+                      //     'price': product['price'],
+                      //     'image': thumbnails.isNotEmpty ? thumbnails.first : ''
+                      //   }, // Pass additional details
+                      // );
                     },
                     child: Padding(
                       padding: const EdgeInsets.only(
-                          right: 16.0), // Spacing between cards
+                          right: 1.0), // Spacing between cards
                       child: SizedBox(
                         width: cardWidth, // Dynamic card width
                         child: ProductCard(

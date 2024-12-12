@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:ecommerce/screen/admin/categries/sub_categries.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -115,6 +116,17 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
     }
   }
 
+  // Show dialog for adding or updating sub-category
+  void showSubCategoryDialog(String parentCategoryId) {
+    // showDialog(
+    //   context: context,
+    //   builder: (context) {
+    //     // return SubCategoryDialog(parentCategoryId: parentCategoryId);
+    //     return context;
+    //   },
+    // );
+  }
+
   // Show Dialog for Adding or Updating Category
   void showCategoryDialog({String? id, String? title, String? description}) {
     titleController.text = title ?? '';
@@ -222,6 +234,10 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                     IconButton(
                       icon: Icon(Icons.delete, color: Colors.red),
                       onPressed: () => deleteCategory(doc.id),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.add, color: Colors.green),
+                      onPressed: () => showSubCategoryDialog(doc.id),
                     ),
                   ],
                 ),

@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:ecommerce/screen/home/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:html' as html;
 import 'package:flutter/foundation.dart';
+import 'package:go_router/go_router.dart';
 
 class UserChatScreen extends StatefulWidget {
   @override

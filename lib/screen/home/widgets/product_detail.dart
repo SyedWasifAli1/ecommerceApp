@@ -131,7 +131,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
             onPressed: () {
-              GoRouter.of(context).go('/home');
+              Navigator.pop(context);
             },
           ),
           actions: [
