@@ -53,8 +53,7 @@ class ProductCard extends StatelessWidget {
                 borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
               ),
               child: imageUrl.isNotEmpty
-                  ? Image.memory(
-                          base64Decode(imageUrl))
+                  ? Image.memory(base64Decode(imageUrl))
                   : Center(
                       child: Text(
                         "Image",
@@ -76,7 +75,7 @@ class ProductCard extends StatelessWidget {
               children: [
                 // Product Price
                 Text(
-                  "\$$price",
+                  "\Rs$price",
                   style: TextStyle(
                     fontSize: priceFontSize,
                     fontWeight: FontWeight.bold,

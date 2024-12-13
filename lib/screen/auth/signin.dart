@@ -15,6 +15,7 @@ class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _rememberMe = true;
+  bool _isObscure = true;
 
   Future<void> loginUser() async {
     try {
@@ -120,9 +121,23 @@ class _SignInScreenState extends State<SignInScreen> {
                 focusedBorder: UnderlineInputBorder(
                   borderSide: BorderSide(color: Colors.green),
                 ),
+                // Add the suffix icon for show/hide functionality
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isObscure ? Icons.visibility_off : Icons.visibility,
+                    color: Colors.green, // Icon color
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isObscure =
+                          !_isObscure; // Toggle the password visibility
+                    });
+                  },
+                ),
               ),
-              obscureText: true,
+              obscureText: _isObscure, // Control the obscuring of text
             ),
+
             const SizedBox(height: 10),
             // Row(
             //   children: [

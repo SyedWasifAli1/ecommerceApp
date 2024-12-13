@@ -16,12 +16,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _confirmPasswordController =
       TextEditingController();
   bool _isLoading = false;
+  bool _isPasswordObscure = true;
+  bool _isConfirmPasswordObscure = true;
 
   Future<void> signUpUser() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
-
     if (password != confirmPassword) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Passwords do not match')),
@@ -103,8 +104,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 focusedBorder: UnderlineInputBorder(
                   borderSide: BorderSide(color: Colors.green),
                 ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isPasswordObscure
+                        ? Icons.visibility_off
+                        : Icons.visibility,
+                    color: Colors.green,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isPasswordObscure =
+                          !_isPasswordObscure; // Toggle password visibility
+                    });
+                  },
+                ),
               ),
-              obscureText: true,
+              obscureText:
+                  _isPasswordObscure, // Obscure the text based on the _isPasswordObscure
             ),
             const SizedBox(height: 20),
             TextField(
@@ -115,8 +131,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 focusedBorder: UnderlineInputBorder(
                   borderSide: BorderSide(color: Colors.green),
                 ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isConfirmPasswordObscure
+                        ? Icons.visibility_off
+                        : Icons.visibility,
+                    color: Colors.green,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isConfirmPasswordObscure =
+                          !_isConfirmPasswordObscure; // Toggle confirm password visibility
+                    });
+                  },
+                ),
               ),
-              obscureText: true,
+              obscureText:
+                  _isConfirmPasswordObscure, // Obscure the text based on the _isConfirmPasswordObscure
             ),
             const SizedBox(height: 30),
             _isLoading

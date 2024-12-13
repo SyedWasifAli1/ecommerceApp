@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:typed_data';
+import 'package:dropdown_search/dropdown_search.dart';
 
 class CartPage extends StatefulWidget {
   @override
@@ -14,6 +15,132 @@ class CartPage extends StatefulWidget {
 class _CartPageState extends State<CartPage> {
   // Variable to hold cart data from Firestore
   List<Map<String, dynamic>> cartItems = [];
+  final currency = "PKR";
+  final List<String> pakistanCities = [
+    'Karachi',
+    'Lahore',
+    'Islamabad',
+    'Rawalpindi',
+    'Peshawar',
+    'Quetta',
+    'Faisalabad',
+    'Multan',
+    'Sialkot',
+    'Gujranwala',
+    'Murree',
+    'Bahawalpur',
+    'Sukkur',
+    'Hyderabad',
+    'Gawadar',
+    'Mardan',
+    'Sargodha',
+    'Mingora',
+    'Chiniot',
+    'Turbat',
+    'Dera Ghazi Khan',
+    'Kasur',
+    'Dera Ismail Khan',
+    'Swat',
+    'Abbottabad',
+    'Jhelum',
+    'Khairpur',
+    'Faisalabad',
+    'Larkana',
+    'Chitral',
+    'Bhakkar',
+    'Bannu',
+    'Kotli',
+    'Mirpur Khas',
+    'Attock',
+    'Jhang',
+    'Okara',
+    'Bhimber',
+    'Jamnagar',
+    'Shikarpur',
+    'Muzaffargarh',
+    'Sheikhupura',
+    'Gojra',
+    'Badin',
+    'Pishin',
+    'Lodhran',
+    'Mandi Bahauddin',
+    'Wazirabad',
+    'Hassan Abdal',
+    'Narowal',
+    'Khushab',
+    'Gujrat',
+    'Pakpattan',
+    'Haripur',
+    'Kotli',
+    'Chakwal',
+    'Hafizabad',
+    'Jhelum',
+    'Rohri',
+    'Mianwali',
+    'Mansehra',
+    'Mirpur',
+    'Sahiwal',
+    'Khairpur',
+    'Chiniot',
+    'Sargodha',
+    'Toba Tek Singh',
+    'Pishin',
+    'Ziarat',
+    'Bhalwal',
+    'Hasilpur',
+    'Jalalpur',
+    'Malkwal',
+    'Jampur',
+    'Matli',
+    'Sui',
+    'Hingorja',
+    'Zafarwal',
+    'Chiniot',
+    'Bannu',
+    'Chak Jhumra',
+    'Fateh Jang',
+    'Vihari',
+    'Khanewal',
+    'Dera Ismail Khan',
+    'Saddar',
+    'Abbottabad',
+    'Buner',
+    'Khushab',
+    'Pindi Gheb',
+    'Ghotki',
+    'Sialkot',
+    'Mithi',
+    'Jamshoro',
+    'Rajanpur',
+    'Thatta',
+    'Muzaffarabad',
+    'Nowshera',
+    'Panjgur',
+    'Barkhan',
+    'Rajanpur',
+    'Layyah',
+    'Chaman',
+    'Umarkot',
+    'Sadiqabad',
+    'Kohat',
+    'Sargodha',
+    'Shahdadpur',
+    'Matiari',
+    'Karachi',
+    'Islamabad',
+    'Lahore',
+    // Add more cities as needed
+  ];
+
+  final List<String> pakistanProvinces = [
+    'Punjab',
+    'Sindh',
+    'Khyber Pakhtunkhwa (KP)',
+    'Balochistan',
+    'Islamabad Capital Territory',
+    'Azad Jammu & Kashmir (AJK)',
+    'Gilgit-Baltistan',
+  ];
 
   @override
   void initState() {
@@ -65,7 +192,7 @@ class _CartPageState extends State<CartPage> {
             'price': parsedPrice,
             'quantity': doc['quantity'],
             'image': imageBytes, // Store the byte data for the image
-            'isSelected': false, // Add isSelected to track the checkbox state
+            'isSelected': true, // Add isSelected to track the checkbox state
           };
         }).toList();
       });
@@ -158,162 +285,268 @@ class _CartPageState extends State<CartPage> {
         final addressController = TextEditingController();
         final streetController = TextEditingController();
         final cityController = TextEditingController();
-        final countryController = TextEditingController();
+        final provinceController = TextEditingController();
+        final countryController = TextEditingController(text: 'Pakistan');
 
         // Calculate the total price of selected items
         double totalPrice = selectedItems.fold(
             0, (sum, item) => sum + (item['price'] * item['quantity']));
 
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min, // Fit the content to screen
-              children: [
-                Text(
-                  'Checkout',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 20),
-                // List of selected cart items
-                ListView.builder(
-                  shrinkWrap: true, // Fit content to avoid overflow
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: selectedItems.length,
-                  itemBuilder: (context, index) {
-                    final item = selectedItems[index];
-                    return ListTile(
-                      leading: item['image'] != null
-                          ? Image.memory(
-                              item['image'],
-                              width: 40,
-                              height: 40,
-                              fit: BoxFit.cover,
-                            )
-                          : Icon(Icons.computer, size: 40),
-                      title: Text(item['name']),
-                      subtitle: Text('Quantity: ${item['quantity']}'),
-                      trailing: Text(
-                        '\$${(item['price'] * item['quantity']).toStringAsFixed(2)}',
-                      ),
-                    );
-                  },
-                ),
-                Divider(),
-                // Shipping details form
-                TextField(
-                  controller: phoneController,
-                  decoration: InputDecoration(
-                    labelText: 'Phone Number',
-                    prefixIcon: Icon(Icons.phone),
-                    border: OutlineInputBorder(),
+        return ClipRRect(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          child: Scaffold(
+            appBar: AppBar(
+              automaticallyImplyLeading: false, // Removes default back button
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Checkout',
+                    style: TextStyle(fontSize: 20, color: Colors.green),
                   ),
-                  keyboardType: TextInputType.phone,
-                ),
-                SizedBox(height: 16),
-                TextField(
-                  controller: addressController,
-                  decoration: InputDecoration(
-                    labelText: 'Address',
-                    prefixIcon: Icon(Icons.location_on),
-                    border: OutlineInputBorder(),
+                  IconButton(
+                    icon: Icon(Icons.close),
+                    onPressed: () {
+                      Navigator.pop(context); // Close the bottom sheet
+                    },
                   ),
-                ),
-                SizedBox(height: 16),
-                TextField(
-                  controller: streetController,
-                  decoration: InputDecoration(
-                    labelText: 'Street Address (Optional)',
-                    prefixIcon: Icon(Icons.streetview),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: cityController,
-                        decoration: InputDecoration(
-                          labelText: 'City',
-                          prefixIcon: Icon(Icons.location_city),
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 16),
-                    Expanded(
-                      child: TextField(
-                        controller: countryController,
-                        decoration: InputDecoration(
-                          labelText: 'Country',
-                          prefixIcon: Icon(Icons.flag),
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20),
-                // Total price
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Total:',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      '\$${totalPrice.toStringAsFixed(2)}',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20),
-                // Proceed to payment button
-                ElevatedButton(
-                  onPressed: () {
-                    // Validate inputs
-                    if (phoneController.text.isEmpty ||
-                        addressController.text.isEmpty ||
-                        cityController.text.isEmpty ||
-                        countryController.text.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text("Please fill all required fields.")),
-                      );
-                      return;
-                    }
+                ],
+              ),
+            ),
+            floatingActionButton: FloatingActionButton.extended(
+              onPressed: () {
+                // Validate inputs
+                if (phoneController.text.isEmpty ||
+                    addressController.text.isEmpty ||
+                    cityController.text.isEmpty ||
+                    countryController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Please fill all required fields.")),
+                  );
+                  return;
+                }
 
-                    // Navigate to the payment page with shipping details
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PaymentPage(
-                          shippingDetails: {
-                            'phone': phoneController.text,
-                            'address': addressController.text,
-                            'street': streetController.text,
-                            'city': cityController.text,
-                            'country': countryController.text,
-                          },
-                        ),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    minimumSize: Size(double.infinity, 50),
+                // Navigate to the payment page with shipping details
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PaymentPage(
+                      shippingDetails: {
+                        'phone': phoneController.text,
+                        'address': addressController.text,
+                        'street': streetController.text,
+                        'city': cityController.text,
+                        'country': countryController.text,
+                      },
+                    ),
                   ),
-                  child: Text(
+                );
+              },
+              label: Row(
+                children: [
+                  Text(
+                    '\ ${currency} ${totalPrice.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white, // Green color for the price text
+                    ),
+                  ),
+                  SizedBox(
+                      width:
+                          8), // Add some spacing between the price and the text
+                  Text(
                     'Proceed to Payment',
-                    style: TextStyle(fontSize: 18),
+                    style: TextStyle(
+                        color: Colors.white), // Green color for the text
                   ),
+                ],
+              ),
+              icon: Icon(
+                Icons.payment,
+                color: Colors.white, // Green color for the icon
+              ),
+              backgroundColor: Colors.green, // White background for the button
+            ),
+            body: Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0), // Uniform horizontal padding
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min, // Fit the content to screen
+                  children: [
+                    SizedBox(height: 16),
+
+                    // Shipping details form
+                    TextField(
+                      controller: phoneController,
+                      decoration: InputDecoration(
+                        labelText: 'Phone Number',
+                        prefixIcon: Icon(Icons.phone),
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 12), // Align content
+                      ),
+                      keyboardType: TextInputType.phone,
+                    ),
+                    SizedBox(height: 16),
+                    TextField(
+                      controller: addressController,
+                      decoration: InputDecoration(
+                        labelText: 'Delivery Address',
+                        prefixIcon: Icon(Icons.location_on),
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 12), // Align content
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    TextField(
+                      controller: streetController,
+                      decoration: InputDecoration(
+                        labelText: 'Street Address (Optional)',
+                        prefixIcon: Icon(Icons.streetview),
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 12), // Align content
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    TextField(
+                      controller: countryController,
+                      enabled: false, // Disable editing
+                      decoration: InputDecoration(
+                        labelText: 'Pakistan',
+                        prefixIcon: Icon(Icons.flag),
+                        border: OutlineInputBorder(),
+                        contentPadding:
+                            EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: DropdownSearch<String>(
+                            items:
+                                pakistanProvinces, // List of cities in Pakistan
+                            selectedItem: provinceController.text.isEmpty
+                                ? null
+                                : provinceController
+                                    .text, // Selected city based on controller
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                provinceController.text =
+                                    newValue ?? ''; // Update the selected city
+                              });
+                            },
+                            dropdownDecoratorProps: DropDownDecoratorProps(
+                              dropdownSearchDecoration: InputDecoration(
+                                labelText: 'Province', // Label for the dropdown
+                                prefixIcon: Icon(
+                                    Icons.location_city), // Icon for the city
+                                filled: true,
+                                fillColor: Colors.grey[200], // Background color
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      10.0), // Border radius
+                                  borderSide: BorderSide.none, // No border side
+                                ),
+                              ),
+                            ),
+                            popupProps: PopupProps.menu(
+                              showSearchBox:
+                                  true, // Enable search box in the dropdown
+                            ),
+                            dropdownBuilder: (context, selectedItem) {
+                              return Text(selectedItem ??
+                                  'Province'); // Display selected city or default label
+                            },
+                          ),
+                        ),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: DropdownSearch<String>(
+                            items: pakistanCities, // List of cities in Pakistan
+                            selectedItem: cityController.text.isEmpty
+                                ? null
+                                : cityController
+                                    .text, // Selected city based on controller
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                cityController.text =
+                                    newValue ?? ''; // Update the selected city
+                              });
+                            },
+                            dropdownDecoratorProps: DropDownDecoratorProps(
+                              dropdownSearchDecoration: InputDecoration(
+                                labelText: 'City', // Label for the dropdown
+                                prefixIcon: Icon(
+                                    Icons.location_city), // Icon for the city
+                                filled: true,
+                                fillColor: Colors.grey[200], // Background color
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      10.0), // Border radius
+                                  borderSide: BorderSide.none, // No border side
+                                ),
+                              ),
+                            ),
+                            popupProps: PopupProps.menu(
+                              showSearchBox:
+                                  true, // Enable search box in the dropdown
+                            ),
+                            dropdownBuilder: (context, selectedItem) {
+                              return Text(selectedItem ??
+                                  'City'); // Display selected city or default label
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    Divider(),
+
+                    // List of selected cart items
+                    ListView.builder(
+                      shrinkWrap: true, // Fit content to avoid overflow
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: selectedItems.length,
+                      itemBuilder: (context, index) {
+                        final item = selectedItems[index];
+                        return ListTile(
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 0), // Align with text fields
+                          leading: item['image'] != null
+                              ? Image.memory(
+                                  item['image'],
+                                  width: 40,
+                                  height: 40,
+                                  fit: BoxFit.cover,
+                                )
+                              : Icon(Icons.computer, size: 40),
+                          title: Text(
+                            item['name'],
+                            style: TextStyle(
+                                fontSize: 16), // Match TextField font size
+                          ),
+                          subtitle: Text(
+                            'Qty: ${item['quantity']}',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                          trailing: Text(
+                            '\ ${currency} ${(item['price'] * item['quantity']).toStringAsFixed(2)}',
+                            style: TextStyle(fontSize: 16), // Match alignment
+                          ),
+                        );
+                      },
+                    ),
+
+                    SizedBox(height: 80),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         );
@@ -338,7 +571,7 @@ class _CartPageState extends State<CartPage> {
             child: cartItems.isEmpty
                 ? Center(child: CircularProgressIndicator())
                 : Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -369,7 +602,8 @@ class _CartPageState extends State<CartPage> {
                                   ],
                                 ),
                                 title: Text(item['name']),
-                                subtitle: Text('Price: \$${item['price']}'),
+                                subtitle:
+                                    Text('\ ${currency} ${item['price']}'),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -411,15 +645,35 @@ class _CartPageState extends State<CartPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Total: \$${totalPrice.toStringAsFixed(2)}',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start, // Align text to the left
+                  children: [
+                    Text(
+                      'Total:',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    SizedBox(height: 1), // Add some spacing between the lines
+                    Text(
+                      '${currency} ${totalPrice.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 14, // Slightly larger font size for the price
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
                 ElevatedButton(
                   onPressed: cartItems.any((item) => item['isSelected'])
                       ? showCheckoutBottomSheet // Show checkout if any item is selected
                       : null,
-                  child: Text('Proceed to Checkout'),
+                  child: Text(
+                    'Proceed to Checkout',
+                    style: TextStyle(color: Colors.green),
+                  ),
                 ),
               ],
             ),
