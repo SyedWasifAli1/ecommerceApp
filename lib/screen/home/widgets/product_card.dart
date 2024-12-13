@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 class ProductCard extends StatelessWidget {
@@ -50,10 +53,8 @@ class ProductCard extends StatelessWidget {
                 borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
               ),
               child: imageUrl.isNotEmpty
-                  ? Image.network(
-                      imageUrl,
-                      // fit: BoxFit.cover,
-                    )
+                  ? Image.memory(
+                          base64Decode(imageUrl))
                   : Center(
                       child: Text(
                         "Image",

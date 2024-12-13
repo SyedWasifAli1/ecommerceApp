@@ -99,9 +99,10 @@ class ProductList extends StatelessWidget {
                       child: SizedBox(
                         width: cardWidth, // Dynamic card width
                         child: ProductCard(
-                          imageUrl: thumbnails.isNotEmpty
-                              ? 'data:image/png;base64,${thumbnails.first}'
-                              : '', // Base64 decoded image
+                          // imageUrl: thumbnails.isNotEmpty
+                          //     ? 'data:image/png;base64,${thumbnails.first}'
+                          //     : '',
+                          imageUrl: thumbnails.first,
                           price: product['price'],
                           onAddToCart: () {
                             ScaffoldMessenger.of(context).showSnackBar(

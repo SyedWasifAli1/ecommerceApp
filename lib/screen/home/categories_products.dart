@@ -72,7 +72,10 @@ class CategoryDetailPage extends StatelessWidget {
           'id': doc.id,
           'name': doc['name'] ?? '',
           'price': doc['price'] ?? 0,
-          'images1': doc['images1'] ?? [],
+          // 'images1': doc['images1'] ?? [],
+          'images1': doc['images1'] != null && doc['images1'] is List
+              ? List<String>.from(doc['images1'])
+              : [],
         };
       }).toList();
     });
@@ -182,9 +185,10 @@ class CategoryDetailPage extends StatelessWidget {
                   );
                 },
                 child: ProductCard(
-                  imageUrl: imageBytesList.isNotEmpty
-                      ? 'data:image/png;base64,${base64Encode(imageBytesList[0])}'
-                      : '', // Convert base64 to URL format if images are found
+                  imageUrl: images.first,
+                  // imageUrl: imageBytesList.isNotEmpty
+                  //     ? 'data:image/png;base64,${base64Encode(imageBytesList[0])}'
+                  //     : '', // Convert base64 to URL format if images are found
                   price: product['price'].toString(),
                   onAddToCart: () {
                     print("Add to Cart clicked for ${product['name']}");
