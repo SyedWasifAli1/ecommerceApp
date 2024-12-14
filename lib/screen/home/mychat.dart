@@ -46,37 +46,37 @@ class _UserChatScreenState extends State<UserChatScreen> {
   }
 
   // Pick image logic
-  Future<void> pickImage() async {
-    if (kIsWeb) {
-      final html.FileUploadInputElement uploadInput =
-          html.FileUploadInputElement();
-      uploadInput.accept = 'image/*';
-      uploadInput.click();
+  // Future<void> pickImage() async {
+  //   if (kIsWeb) {
+  //     final html.FileUploadInputElement uploadInput =
+  //         html.FileUploadInputElement();
+  //     uploadInput.accept = 'image/*';
+  //     uploadInput.click();
 
-      uploadInput.onChange.listen((e) async {
-        final files = uploadInput.files;
-        if (files!.isEmpty) return;
+  //     uploadInput.onChange.listen((e) async {
+  //       final files = uploadInput.files;
+  //       if (files!.isEmpty) return;
 
-        final reader = html.FileReader();
-        reader.readAsArrayBuffer(files[0]);
-        reader.onLoadEnd.listen((e) async {
-          final Uint8List data = reader.result as Uint8List;
-          final String encoded = base64Encode(data);
-          setState(() {
-            _imageBase64 = encoded;
-          });
-        });
-      });
-    } else {
-      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        Uint8List data = await image.readAsBytes();
-        setState(() {
-          _imageBase64 = base64Encode(data);
-        });
-      }
-    }
-  }
+  //       final reader = html.FileReader();
+  //       reader.readAsArrayBuffer(files[0]);
+  //       reader.onLoadEnd.listen((e) async {
+  //         final Uint8List data = reader.result as Uint8List;
+  //         final String encoded = base64Encode(data);
+  //         setState(() {
+  //           _imageBase64 = encoded;
+  //         });
+  //       });
+  //     });
+  //   } else {
+  //     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+  //     if (image != null) {
+  //       Uint8List data = await image.readAsBytes();
+  //       setState(() {
+  //         _imageBase64 = base64Encode(data);
+  //       });
+  //     }
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -204,11 +204,11 @@ class _UserChatScreenState extends State<UserChatScreen> {
                     ),
                   ),
                 ),
-                SizedBox(width: 8),
-                IconButton(
-                  icon: Icon(Icons.image, color: Colors.blue),
-                  onPressed: pickImage, // Pick image
-                ),
+                // SizedBox(width: 8),
+                // IconButton(
+                //   icon: Icon(Icons.image, color: Colors.blue),
+                //   onPressed: pickImage, // Pick image
+                // ),
                 SizedBox(width: 8),
                 CircleAvatar(
                   backgroundColor: Colors.blue,

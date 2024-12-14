@@ -65,7 +65,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 // Splash Logo
                 Image.asset(
                   'assets/images/logo.png', // Place your logo in assets/images
-                  width: 400,
+                  width: 500,
                   height: 300,
                 ),
                 SizedBox(height: 20),

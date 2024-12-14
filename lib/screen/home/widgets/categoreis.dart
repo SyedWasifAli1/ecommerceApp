@@ -58,7 +58,7 @@ class _CategoryPageState extends State<CategoryPage> {
               bool isSelected = selectedCategoryId == category["id"];
 
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                padding: const EdgeInsets.symmetric(horizontal: 5.0),
                 child: MouseRegion(
                   onEnter: (_) {
                     // Update the hover color on enter

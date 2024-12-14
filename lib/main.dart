@@ -50,7 +50,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.light,
       theme: ThemeData.light(),
       darkTheme: ThemeData.dark(),
       routerConfig: _router, // Set the GoRouter configuration
@@ -97,18 +97,18 @@ class MyApp extends StatelessWidget {
         path: '/profile',
         builder: (context, state) => ProfilePage(),
       ),
-      GoRoute(
-        path: '/subcate',
-        builder: (context, state) => AddCategoryScreen(),
-      ),
-      GoRoute(
-        path: '/cate',
-        builder: (context, state) => CategoriesScreen(),
-      ),
-      GoRoute(
-        path: '/products',
-        builder: (context, state) => ProductsScreen(),
-      ),
+      // GoRoute(
+      //   path: '/subcate',
+      //   builder: (context, state) => AddCategoryScreen(),
+      // ),
+      // GoRoute(
+      //   path: '/cate',
+      //   builder: (context, state) => CategoriesScreen(),
+      // ),
+      // GoRoute(
+      //   path: '/products',
+      //   builder: (context, state) => ProductsScreen(),
+      // ),
       GoRoute(
         path: '/chats',
         builder: (context, state) => UserChatScreen(),

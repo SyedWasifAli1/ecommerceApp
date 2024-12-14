@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:typed_data';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter/services.dart';
 
 class CartPage extends StatefulWidget {
   @override
@@ -141,6 +142,28 @@ class _CartPageState extends State<CartPage> {
     'Azad Jammu & Kashmir (AJK)',
     'Gilgit-Baltistan',
   ];
+
+  final List<String> pakistanProvinces1 = [
+    'Punjab',
+    'Sindh',
+    'Khyber Pakhtunkhwa',
+    'Balochistan',
+    'Islamabad Capital Territory',
+    'Azad Kashmir',
+    'Gilgit-Baltistan'
+  ];
+
+  final Map<String, List<String>> provinceCities1 = {
+    'Punjab': ['Lahore', 'Multan', 'Faisalabad', 'Rawalpindi'],
+    'Sindh': ['Karachi', 'Hyderabad', 'Sukkur', 'Larkana'],
+    'Khyber Pakhtunkhwa': ['Peshawar', 'Abbottabad', 'Swat'],
+    'Balochistan': ['Quetta', 'Gwadar', 'Turbat'],
+    'Islamabad Capital Territory': ['Islamabad'],
+    'Azad Kashmir': ['Muzaffarabad', 'Mirpur', 'Rawalakot'],
+    'Gilgit-Baltistan': ['Gilgit', 'Skardu', 'Hunza'],
+  };
+
+  // final List<String> pakistanCities1 = []; // Dynamic based on province
 
   @override
   void initState() {
@@ -389,7 +412,15 @@ class _CartPageState extends State<CartPage> {
                             vertical: 16, horizontal: 12), // Align content
                       ),
                       keyboardType: TextInputType.phone,
+                      inputFormatters: [
+                        FilteringTextInputFormatter
+                            .digitsOnly, // Allow digits only
+                        LengthLimitingTextInputFormatter(
+                            10), // Limit to 10 digits after +92
+                        PhoneInputFormatter(), // Custom formatter for validation
+                      ],
                     ),
+
                     SizedBox(height: 16),
                     TextField(
                       controller: addressController,
@@ -400,6 +431,7 @@ class _CartPageState extends State<CartPage> {
                         contentPadding: EdgeInsets.symmetric(
                             vertical: 16, horizontal: 12), // Align content
                       ),
+                      keyboardType: TextInputType.text,
                     ),
                     SizedBox(height: 16),
                     TextField(
@@ -411,7 +443,9 @@ class _CartPageState extends State<CartPage> {
                         contentPadding: EdgeInsets.symmetric(
                             vertical: 16, horizontal: 12), // Align content
                       ),
+                      keyboardType: TextInputType.text,
                     ),
+
                     SizedBox(height: 16),
                     TextField(
                       controller: countryController,
@@ -429,39 +463,36 @@ class _CartPageState extends State<CartPage> {
                       children: [
                         Expanded(
                           child: DropdownSearch<String>(
-                            items:
-                                pakistanProvinces, // List of cities in Pakistan
+                            items: pakistanProvinces1,
                             selectedItem: provinceController.text.isEmpty
                                 ? null
-                                : provinceController
-                                    .text, // Selected city based on controller
+                                : provinceController.text,
                             onChanged: (String? newValue) {
                               setState(() {
-                                provinceController.text =
-                                    newValue ?? ''; // Update the selected city
+                                provinceController.text = newValue ?? '';
+                                // Update city dropdown based on selected province
+                                final cities = provinceCities1[newValue] ?? [];
+                                cityController.text =
+                                    cities.isNotEmpty ? cities.first : '';
+                                pakistanCities.clear();
+                                pakistanCities.addAll(cities);
                               });
                             },
                             dropdownDecoratorProps: DropDownDecoratorProps(
                               dropdownSearchDecoration: InputDecoration(
-                                labelText: 'Province', // Label for the dropdown
-                                prefixIcon: Icon(
-                                    Icons.location_city), // Icon for the city
+                                labelText: 'Province',
+                                prefixIcon: Icon(Icons.location_city),
                                 filled: true,
-                                fillColor: Colors.grey[200], // Background color
+                                fillColor: Colors.grey[200],
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      10.0), // Border radius
-                                  borderSide: BorderSide.none, // No border side
+                                  borderRadius: BorderRadius.circular(10.0),
+                                  borderSide: BorderSide.none,
                                 ),
                               ),
                             ),
-                            popupProps: PopupProps.menu(
-                              showSearchBox:
-                                  true, // Enable search box in the dropdown
-                            ),
+                            popupProps: PopupProps.menu(showSearchBox: true),
                             dropdownBuilder: (context, selectedItem) {
-                              return Text(selectedItem ??
-                                  'Province'); // Display selected city or default label
+                              return Text(selectedItem ?? 'Province');
                             },
                           ),
                         ),
@@ -505,6 +536,87 @@ class _CartPageState extends State<CartPage> {
                         ),
                       ],
                     ),
+
+                    // Row(
+                    //   children: [
+                    //     Expanded(
+                    //       child: DropdownSearch<String>(
+                    //         items:
+                    //             pakistanProvinces, // List of cities in Pakistan
+                    //         selectedItem: provinceController.text.isEmpty
+                    //             ? null
+                    //             : provinceController
+                    //                 .text, // Selected city based on controller
+                    //         onChanged: (String? newValue) {
+                    //           setState(() {
+                    //             provinceController.text =
+                    //                 newValue ?? ''; // Update the selected city
+                    //           });
+                    //         },
+                    //         dropdownDecoratorProps: DropDownDecoratorProps(
+                    //           dropdownSearchDecoration: InputDecoration(
+                    //             labelText: 'Province', // Label for the dropdown
+                    //             prefixIcon: Icon(
+                    //                 Icons.location_city), // Icon for the city
+                    //             filled: true,
+                    //             fillColor: Colors.grey[200], // Background color
+                    //             border: OutlineInputBorder(
+                    //               borderRadius: BorderRadius.circular(
+                    //                   10.0), // Border radius
+                    //               borderSide: BorderSide.none, // No border side
+                    //             ),
+                    //           ),
+                    //         ),
+                    //         popupProps: PopupProps.menu(
+                    //           showSearchBox:
+                    //               true, // Enable search box in the dropdown
+                    //         ),
+                    //         dropdownBuilder: (context, selectedItem) {
+                    //           return Text(selectedItem ??
+                    //               'Province'); // Display selected city or default label
+                    //         },
+                    //       ),
+                    //     ),
+                    //     SizedBox(width: 16),
+                    //     Expanded(
+                    //       child: DropdownSearch<String>(
+                    //         items: pakistanCities, // List of cities in Pakistan
+                    //         selectedItem: cityController.text.isEmpty
+                    //             ? null
+                    //             : cityController
+                    //                 .text, // Selected city based on controller
+                    //         onChanged: (String? newValue) {
+                    //           setState(() {
+                    //             cityController.text =
+                    //                 newValue ?? ''; // Update the selected city
+                    //           });
+                    //         },
+                    //         dropdownDecoratorProps: DropDownDecoratorProps(
+                    //           dropdownSearchDecoration: InputDecoration(
+                    //             labelText: 'City', // Label for the dropdown
+                    //             prefixIcon: Icon(
+                    //                 Icons.location_city), // Icon for the city
+                    //             filled: true,
+                    //             fillColor: Colors.grey[200], // Background color
+                    //             border: OutlineInputBorder(
+                    //               borderRadius: BorderRadius.circular(
+                    //                   10.0), // Border radius
+                    //               borderSide: BorderSide.none, // No border side
+                    //             ),
+                    //           ),
+                    //         ),
+                    //         popupProps: PopupProps.menu(
+                    //           showSearchBox:
+                    //               true, // Enable search box in the dropdown
+                    //         ),
+                    //         dropdownBuilder: (context, selectedItem) {
+                    //           return Text(selectedItem ??
+                    //               'City'); // Display selected city or default label
+                    //         },
+                    //       ),
+                    //     ),
+                    //   ],
+                    // ),
 
                     Divider(),
 
@@ -681,5 +793,18 @@ class _CartPageState extends State<CartPage> {
         ],
       ),
     );
+  }
+}
+
+class PhoneInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    // Only allow numbers and restrict to proper format
+    final text = newValue.text;
+    if (text.length > 0 && text[0] != '3') {
+      return oldValue; // Prevent any number that doesn't start with '3'
+    }
+    return newValue;
   }
 }
